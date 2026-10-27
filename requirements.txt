@@ -1,1 +1,3 @@
+# 🎯 Conti Clasificador — dependencias
 streamlit
+openai
