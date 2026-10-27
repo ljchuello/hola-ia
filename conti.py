@@ -29,9 +29,13 @@ Ejemplos:
 - "Necesito agregar un usuario nuevo" → amarillo
 - "¿Cómo descargo el reporte mensual?" → verde
 
+Si el texto menciona una empresa o persona, un teléfono o un correo, cópialos en "nombre" y "contacto". Si no aparecen, déjalos vacíos.
+
 Responde SOLO con este JSON, sin markdown:
 {
   "semaforo": "rojo | amarillo | verde",
+  "nombre": "empresa o persona mencionada, o vacío",
+  "contacto": "teléfono o correo mencionado, o vacío",
   "resumen": "una frase corta del caso",
   "motivo": "por qué elegiste ese color",
   "acciones": ["paso 1", "paso 2"]

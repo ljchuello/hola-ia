@@ -15,6 +15,13 @@ Este proyecto es una **muestra didáctica**, no un sistema real. No va a producc
 - ✅ El código se lee de arriba abajo como un tutorial.
 - ✅ Los nombres deben ser obvios y en español.
 - ✅ Si dudas entre agregar algo o no agregarlo: **no lo agregues**.
+- ✅ Única excepción: leer `st.secrets` sin romper la app cuando no existe el archivo de secretos.
+
+## 🔐 Secretos
+
+- La clave real vive en `.streamlit/secrets.toml`, ignorado por git.
+- La plantilla pública es `.streamlit/secrets.example.toml`.
+- Nunca escribas claves reales en el código, en este archivo ni en el README.
 
 ## 🎓 Propósito
 
