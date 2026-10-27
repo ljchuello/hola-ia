@@ -1,0 +1,102 @@
+# ========================================
+# Python
+# ========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Byte-compiled / cache de herramientas
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.pyre/
+.hypothesis/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+nosetests.xml
+*.cover
+*.log
+
+# ========================================
+# Entornos virtuales
+# ========================================
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# ========================================
+# Streamlit
+# ========================================
+# Secretos y configuración local (¡no subir credenciales!)
+.streamlit/secrets.toml
+.streamlit/config.toml
+
+# ========================================
+# Variables de entorno
+# ========================================
+.env
+.env.*
+!.env.example
+*.env
+
+# ========================================
+# Editores / IDE
+# ========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.spyderproject
+.spyproject
+.ropeproject
+
+# ========================================
+# Jupyter Notebook
+# ========================================
+.ipynb_checkpoints/
+
+# ========================================
+# Sistema operativo
+# ========================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ========================================
+# Otros
+# ========================================
+*.bak
+*.tmp
+.cache/
