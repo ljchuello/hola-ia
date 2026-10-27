@@ -6,7 +6,7 @@ import streamlit as st
 
 from conti import SEMAFORO, clasificar, notificar
 
-st.set_page_config(page_title="Conti Clasificador", page_icon="🎯")
+st.set_page_config(page_title="Conti | Clasificador", page_icon="🎯")
 
 # 📚 El historial vive solo mientras la pestaña esté abierta
 if "historial" not in st.session_state:
@@ -20,7 +20,7 @@ with st.sidebar:
     modelo = st.text_input("🧠 Modelo", value=os.getenv("LLM_MODEL", "gpt-4o-mini"))
     st.caption("Funciona con OpenAI, Groq, OpenRouter u Ollama 😉")
 
-st.title("🎯 Conti Clasificador")
+st.title("🎯 Conti | Clasificador")
 st.write("Pega un caso de soporte y Conti le pone semáforo 🚦 para que Producción sepa qué atender primero.")
 
 # 📥 Dos formas de entrada
@@ -83,3 +83,7 @@ if st.session_state.historial:
         for caso in reversed(st.session_state.historial):
             st.write(f"{caso['emoji']} **{caso['tipo']}** · {caso['resumen']}")
             st.caption(caso["aviso"])
+
+# ❤️ Firma del proyecto
+st.divider()
+st.caption("Realizado por 99% robot 🤖, 1% humano 🧑 y 100% amor ❤️")
