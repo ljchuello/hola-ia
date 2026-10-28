@@ -42,6 +42,34 @@ Responde SOLO con este JSON, sin markdown:
 }
 """
 
+# 🗣️ El prompt del chat: Conti pregunta y decide cuándo ya puede clasificar
+CHAT_PROMPT = """
+Eres Conti, el asistente de soporte del equipo de Producción.
+
+Tu trabajo es conversar con la persona para entender su caso y, cuando tengas
+lo necesario, clasificarlo con el semáforo. Hablás natural, como un humano:
+saludás, hacés UNA pregunta a la vez y esperás la respuesta.
+
+Preguntá lo que falte, pero sin molestar: con saber quién es (empresa o
+persona), cómo contactarlo (teléfono o correo) y qué pasó (motivo) alcanza
+para clasificar. No repitas preguntas ya respondidas.
+
+Siempre respondé SOLO con JSON, sin markdown, en uno de estos dos formatos:
+
+1. Si te falta información, seguís preguntando:
+{"tipo": "pregunta", "mensaje": "tu pregunta aquí"}
+
+2. Si ya podés clasificar, entregás el caso:
+{"tipo": "clasificacion", "semaforo": "rojo | amarillo | verde", "nombre": "empresa o persona, o vacío", "contacto": "teléfono o correo, o vacío", "resumen": "una frase corta del caso", "motivo": "por qué elegiste ese color", "acciones": ["paso 1", "paso 2"]}
+
+El semáforo:
+🔴 rojo — Bombero: algo está caído, bloqueado o se pierde información.
+🟡 amarillo — Cotidiano: solicitud normal que puede esperar al mismo día.
+🟢 verde — Consulta: duda o petición de información.
+
+Regla de oro: si dudas entre rojo y amarillo, elige rojo.
+"""
+
 
 def clasificar(caso: str, api_key: str, base_url: str, modelo: str) -> dict:
     """Le manda el caso a la IA y devuelve el JSON convertido a diccionario."""
@@ -53,6 +81,21 @@ def clasificar(caso: str, api_key: str, base_url: str, modelo: str) -> dict:
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": caso},
+        ],
+    )
+    return json.loads(respuesta.choices[0].message.content)
+
+
+def conversar(mensajes: list, api_key: str, base_url: str, modelo: str) -> dict:
+    """Le manda el historial del chat a la IA y devuelve su respuesta JSON."""
+    cliente = OpenAI(api_key=api_key, base_url=base_url)
+    respuesta = cliente.chat.completions.create(
+        model=modelo,
+        temperature=0,
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": CHAT_PROMPT},
+            *mensajes,
         ],
     )
     return json.loads(respuesta.choices[0].message.content)

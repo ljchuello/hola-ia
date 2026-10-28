@@ -7,7 +7,7 @@ from datetime import datetime
 import streamlit as st
 from streamlit.errors import StreamlitSecretNotFoundError
 
-from conti import SEMAFORO, clasificar, notificar
+from conti import SEMAFORO, clasificar, conversar, notificar
 
 RUTA_CASOS = "casos.json"
 
@@ -35,38 +35,119 @@ def leer_secreto(clave, defecto=""):
         return defecto
 
 
+# 💬 Cada conversación con Conti arranca con un saludo y una primera pregunta
+def chat_nuevo():
+    return [
+        {
+            "role": "assistant",
+            "content": "¡Hola! Soy Conti 🎯 Contame qué pasó y yo lo clasifico. ¿Quién sos o de qué empresa escribís?",
+        }
+    ]
+
+
 if "casos" not in st.session_state:
     st.session_state.casos = cargar_casos()
+
+if "mensajes" not in st.session_state:
+    st.session_state.mensajes = chat_nuevo()
+
+if "pendiente" not in st.session_state:
+    st.session_state.pendiente = None
 
 api_key = leer_secreto("LLM_API_KEY") or os.getenv("LLM_API_KEY", "")
 base_url = leer_secreto("LLM_BASE_URL") or os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
 modelo = leer_secreto("LLM_MODEL") or os.getenv("LLM_MODEL", "gpt-4o-mini")
 
 st.title("🎯 Conti Clasificador")
-st.write("Pega un caso de soporte y Conti le pone semáforo 🚦 para que Producción sepa qué atender primero.")
+st.write("Hablá con Conti, pegá un correo o gestioná tus casos. Conti le pone semáforo 🚦 para que Producción sepa qué atender primero.")
 
 # ✅ Aviso de la última notificación
 if "aviso" in st.session_state:
     st.success(st.session_state.pop("aviso"))
 
-# 📥 Tres pestañas: crear, pegar y gestionar
-tab_nuevo, tab_texto, tab_gestion = st.tabs(["📝 Nuevo caso", "📋 Pegar texto", "🗂️ Gestión"])
+# 📥 Tres pestañas: charlar, pegar correo y gestionar
+tab_chat, tab_texto, tab_gestion = st.tabs(["💬 Chat agéntico", "📋 Pegar correo", "🗂️ Gestión"])
 
-with tab_nuevo:
-    with st.form("formulario_caso"):
-        nombre = st.text_input("🏢 Empresa o persona")
-        contacto = st.text_input("📞 Teléfono o correo")
-        motivo_contacto = st.text_area("📝 Motivo del contacto")
-        enviar_formulario = st.form_submit_button("🚦 Clasificar caso")
+# 💬 Pestaña 1: la conversación con Conti
+with tab_chat:
+    # 🗨️ Dibujamos toda la conversación
+    for mensaje in st.session_state.mensajes:
+        with st.chat_message(mensaje["role"]):
+            st.write(mensaje["content"])
 
+    # Conti ya clasificó: pedimos confirmación antes de guardar
+    if st.session_state.pendiente:
+        caso = st.session_state.pendiente
+        nivel = SEMAFORO[caso["semaforo"]]
+
+        with st.container(border=True):
+            st.subheader("🚦 ¿Confirmás esta clasificación?")
+            st.write(f"{nivel['emoji']} **{nivel['nombre']}** · {caso['resumen']}")
+            st.write(f"🏢 **{caso['nombre'] or 'Sin nombre'}** · 📞 {caso['contacto'] or 'Sin contacto'}")
+            st.write(f"💡 **Por qué:** {caso['motivo']}")
+            st.write("✅ **Acciones sugeridas:**")
+            for accion in caso["acciones"]:
+                st.write(f"- {accion}")
+
+            col_si, col_no = st.columns(2)
+            if col_si.button("✅ Confirmar y guardar", use_container_width=True):
+                st.session_state.ultimo = {
+                    "id": max((c["id"] for c in st.session_state.casos), default=0) + 1,
+                    "nombre": caso.get("nombre", ""),
+                    "contacto": caso.get("contacto", ""),
+                    "motivo_contacto": caso.get("resumen", ""),
+                    "semaforo": caso["semaforo"],
+                    "resumen": caso.get("resumen", ""),
+                    "explicacion": caso.get("motivo", ""),
+                    "acciones": caso.get("acciones", []),
+                    "estado": "abierto",
+                    "notificado": False,
+                    "fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
+                }
+                st.session_state.casos.append(st.session_state.ultimo)
+                guardar_casos(st.session_state.casos)
+                st.session_state.aviso = "¡Caso guardado! 🎉"
+                st.session_state.mensajes = chat_nuevo()
+                st.session_state.pendiente = None
+                st.rerun()
+
+            if col_no.button("🔁 Seguir hablando", use_container_width=True):
+                # Sacamos la clasificación del historial y seguimos la charla
+                if st.session_state.mensajes and st.session_state.mensajes[-1]["role"] == "assistant":
+                    st.session_state.mensajes.pop()
+                st.session_state.pendiente = None
+                st.rerun()
+    else:
+        # 🔑 Sin llave no hay magia
+        if not api_key:
+            st.warning("Falta configurar LLM_API_KEY en .streamlit/secrets.toml 🔑")
+        else:
+            entrada = st.chat_input("Escribí tu mensaje...")
+            if entrada:
+                st.session_state.mensajes.append({"role": "user", "content": entrada})
+                respuesta = conversar(st.session_state.mensajes, api_key, base_url, modelo)
+                if respuesta.get("tipo") == "clasificacion":
+                    st.session_state.pendiente = respuesta
+                    nivel = SEMAFORO[respuesta["semaforo"]]
+                    st.session_state.mensajes.append(
+                        {
+                            "role": "assistant",
+                            "content": f"{nivel['emoji']} ¡Listo! Clasifiqué tu caso como **{nivel['nombre']}**. Revisá el detalle y confirmalo para guardarlo.",
+                        }
+                    )
+                else:
+                    st.session_state.mensajes.append({"role": "assistant", "content": respuesta.get("mensaje", "")})
+                st.rerun()
+
+# 📋 Pestaña 2: pegar un correo completo
 with tab_texto:
     with st.form("formulario_texto"):
         texto = st.text_area("Pega aquí el correo o mensaje completo", height=200)
-        enviar_texto = st.form_submit_button("🚦 Clasificar texto")
+        enviar_texto = st.form_submit_button("🚦 Clasificar correo")
 
 with tab_gestion:
     if not st.session_state.casos:
-        st.info("Todavía no hay casos. Clasifica uno en la pestaña 📝 Nuevo caso.")
+        st.info("Todavía no hay casos. Chateá con Conti o pegá un correo para crear el primero.")
     else:
         abiertos = sum(1 for caso in st.session_state.casos if caso["estado"] == "abierto")
         col_abiertos, col_cerrados, col_total = st.columns(3)
@@ -138,36 +219,11 @@ with tab_gestion:
             st.info("No hay casos que coincidan con la búsqueda 🔍")
 
 # 🔑 Sin llave no hay magia
-if enviar_formulario or enviar_texto:
-    if not api_key:
-        st.warning("Falta configurar LLM_API_KEY en .streamlit/secrets.toml 🔑")
-        st.stop()
+if enviar_texto and not api_key:
+    st.warning("Falta configurar LLM_API_KEY en .streamlit/secrets.toml 🔑")
+    st.stop()
 
-# 🚦 Clasificamos y guardamos el caso como abierto
-if enviar_formulario:
-    caso_texto = f"Empresa o persona: {nombre}\nContacto: {contacto}\nMotivo: {motivo_contacto}"
-    resultado = clasificar(caso_texto, api_key, base_url, modelo)
-    resultado["nombre"] = nombre or resultado.get("nombre", "")
-    resultado["contacto"] = contacto or resultado.get("contacto", "")
-    resultado["motivo_contacto"] = motivo_contacto
-
-    st.session_state.ultimo = {
-        "id": max((caso["id"] for caso in st.session_state.casos), default=0) + 1,
-        "nombre": resultado["nombre"],
-        "contacto": resultado["contacto"],
-        "motivo_contacto": resultado["motivo_contacto"],
-        "semaforo": resultado["semaforo"],
-        "resumen": resultado["resumen"],
-        "explicacion": resultado["motivo"],
-        "acciones": resultado["acciones"],
-        "estado": "abierto",
-        "notificado": False,
-        "fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
-    }
-    st.session_state.casos.append(st.session_state.ultimo)
-    guardar_casos(st.session_state.casos)
-    st.rerun()
-
+# 🚦 Clasificamos el correo pegado y lo guardamos como abierto
 if enviar_texto:
     resultado = clasificar(texto, api_key, base_url, modelo)
     st.session_state.ultimo = {

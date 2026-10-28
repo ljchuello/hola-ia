@@ -1,6 +1,6 @@
 # 🎯 Conti Clasificador
 
-Una muestra mínima de cómo usar un LLM para clasificar casos de soporte y avisar al equipo de Producción con un semáforo.
+Una muestra mínima de cómo usar un LLM para clasificar casos de soporte **conversando con un chatbot** y avisar al equipo de Producción con un semáforo.
 
 > ⚠️ Proyecto demostrativo. No es para producción: guarda los casos en un JSON local, no valida errores y no envía notificaciones reales.
 
@@ -56,6 +56,18 @@ Funciona con cualquier API compatible con OpenAI 🤝:
 - OpenRouter: `https://openrouter.ai/api/v1`
 - Ollama: `http://localhost:11434/v1` (la API key puede ser cualquier texto)
 
+## 💬 Chat agéntico
+
+La pestaña **Chat agéntico** reemplaza al formulario de "Nuevo caso":
+
+1. Conti saluda y te va preguntando de a una cosa: quién sos, cómo contactarte y qué pasó.
+2. Le respondés con lenguaje natural, como en un chat normal. Nada de formatos.
+3. Cuando Conti cree que ya tiene lo necesario, clasifica el caso con el semáforo.
+4. Antes de guardar, te muestra el resumen y pedís confirmación. Si no quedó bien, seguís hablando.
+5. Al confirmar, el caso se guarda como abierto y queda en Gestión.
+
+También podés pegar un correo completo en la pestaña **📋 Pegar correo** y Conti lo clasifica al toque.
+
 ## 🗂️ Gestión de casos
 
 La pestaña **Gestión** permite:
@@ -70,16 +82,17 @@ Los casos se guardan en `casos.json`, así que sobreviven a una recarga del nave
 
 ## 🧠 Cómo funciona
 
-1. Escribes un caso en el formulario o pegas un correo completo.
-2. `conti.py` le manda el caso al modelo con un prompt que define el semáforo.
-3. El modelo responde un JSON con color, nombre, contacto, resumen, motivo y acciones.
-4. La app guarda el caso como **abierto** y pinta la tarjeta.
-5. En **Gestión** puedes buscarlo, cerrarlo, reabrirlo o notificarlo.
+1. Hablás con Conti en el chat (o pegás un correo completo).
+2. `conti.py` le manda el historial al modelo con un prompt que define el semáforo.
+3. En cada turno el modelo responde un JSON: o hace una pregunta, o entrega la clasificación.
+4. Cuando clasifica, la app te muestra el resumen para confirmar antes de guardar.
+5. El caso se guarda como **abierto**, pinta la tarjeta y queda en **Gestión**.
+6. En **Gestión** puedes buscarlo, cerrarlo, reabrirlo o notificarlo.
 
 ## 📁 Archivos
 
 - `app.py` — interfaz de Streamlit.
-- `conti.py` — prompt, llamada al modelo y mensaje de notificación.
+- `conti.py` — prompts, llamada al modelo y mensaje de notificación.
 - `casos.json` — casos guardados localmente (ignorado por git).
 - `.streamlit/secrets.example.toml` — plantilla de secretos.
 - `.streamlit/secrets.toml` — tu clave real (ignorado por git).
