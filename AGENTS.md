@@ -31,9 +31,9 @@ Mostrar lo simple que es conectar un LLM a Streamlit para clasificar casos de so
 
 | Color | Nombre | Qué significa | SLA |
 | --- | --- | --- | --- |
-| 🔴 | Bombero | Algo está caído, bloqueado o se pierde información | 15 minutos |
-| 🟡 | Cotidiano | Solicitud normal de operación | Mismo día |
-| 🟢 | Consulta | Duda o petición de información | 24-48 horas |
+| 🔴 | Bombero | Un proceso crítico está detenido y hay un cliente esperando: no se puede guardar una factura o una nota de crédito, no se puede cerrar una venta, el sistema no responde o se pierde información | 15 minutos |
+| 🟡 | Cotidiano | El sistema funciona, pero algo lo traba: la impresora no imprime, va lento o una pantalla da error, y se puede seguir trabajando por otro lado | Mismo día |
+| 🟢 | Consulta | Una duda, una solicitud de información o un tema con un tercero (proveedor, banco, internet) que no frena la operación | 24-48 horas |
 
 **Regla de oro:** ante la duda entre 🔴 y 🟡, siempre 🔴. Nunca se minimiza un posible incendio.
 
