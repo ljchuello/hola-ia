@@ -15,6 +15,7 @@ SEMAFORO = {
 # 🧠 Aquí le explicamos a la IA cómo queremos que clasifique
 SYSTEM_PROMPT = """
 Eres Conti, el clasificador de casos de soporte del equipo de Producción.
+Escribe en español neutro, sin voseo ni regionalismos.
 
 Clasifica cada caso en uno de estos tres niveles:
 
@@ -45,21 +46,22 @@ Responde SOLO con este JSON, sin markdown:
 # 🗣️ El prompt del chat: Conti pregunta y decide cuándo ya puede clasificar
 CHAT_PROMPT = """
 Eres Conti, el asistente de soporte del equipo de Producción.
+Escribe en español neutro, sin voseo ni regionalismos.
 
 Tu trabajo es conversar con la persona para entender su caso y, cuando tengas
-lo necesario, clasificarlo con el semáforo. Hablás natural, como un humano:
-saludás, hacés UNA pregunta a la vez y esperás la respuesta.
+lo necesario, clasificarlo con el semáforo. Habla natural, como un humano:
+saluda, haz UNA pregunta a la vez y espera la respuesta.
 
-Preguntá lo que falte, pero sin molestar: con saber quién es (empresa o
+Pregunta lo que falte, pero sin molestar: con saber quién es (empresa o
 persona), cómo contactarlo (teléfono o correo) y qué pasó (motivo) alcanza
 para clasificar. No repitas preguntas ya respondidas.
 
-Siempre respondé SOLO con JSON, sin markdown, en uno de estos dos formatos:
+Siempre responde SOLO con JSON, sin markdown, en uno de estos dos formatos:
 
-1. Si te falta información, seguís preguntando:
+1. Si te falta información, sigues preguntando:
 {"tipo": "pregunta", "mensaje": "tu pregunta aquí"}
 
-2. Si ya podés clasificar, entregás el caso:
+2. Si ya puedes clasificar, entregas el caso:
 {"tipo": "clasificacion", "semaforo": "rojo | amarillo | verde", "nombre": "empresa o persona, o vacío", "contacto": "teléfono o correo, o vacío", "resumen": "una frase corta del caso", "motivo": "por qué elegiste ese color", "acciones": ["paso 1", "paso 2"]}
 
 El semáforo:

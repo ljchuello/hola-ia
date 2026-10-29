@@ -60,7 +60,7 @@ def chat_nuevo():
     return [
         {
             "role": "assistant",
-            "content": "¡Hola! Soy Conti 🎯 Contame qué pasó y yo lo clasifico. ¿Quién sos o de qué empresa escribís?",
+            "content": "¡Hola! Soy Conti 🎯 Cuéntame qué pasó y yo lo clasifico. ¿Quién eres o de qué empresa escribes?",
         }
     ]
 
@@ -141,28 +141,28 @@ st.write(
     "clasifica en un semáforo de urgencia para que Producción sepa **qué atender primero y qué puede esperar**."
 )
 st.write(
-    "Sin formularios eternos ni planillas a mano: contás tu caso en tus palabras y Conti devuelve "
+    "Sin formularios eternos ni hojas de cálculo a mano: cuentas tu caso en tus palabras y Conti devuelve "
     "un resumen, el motivo de la clasificación y los próximos pasos, listo para confirmar y guardar."
 )
 
 col_conversa, col_clasifica, col_gestion = st.columns(3)
 with col_conversa:
-    st.markdown("#### 💬 Conversá")
-    st.caption("Describí tu caso en lenguaje natural. Conti pregunta lo justo, una cosa a la vez, y nada más.")
+    st.markdown("#### 💬 Conversa")
+    st.caption("Describe tu caso en lenguaje natural. Conti pregunta lo justo, una cosa a la vez, y nada más.")
 with col_clasifica:
-    st.markdown("#### 🚦 Clasificá")
+    st.markdown("#### 🚦 Clasifica")
     st.caption("Semáforo de urgencia con SLA: 🔴 15 minutos · 🟡 mismo día · 🟢 24-48 horas.")
 with col_gestion:
-    st.markdown("#### 🗂️ Gestioná")
-    st.caption("Buscá, filtrá, cerrá y notificá casos desde un solo lugar, sin salir de la app.")
+    st.markdown("#### 🗂️ Gestiona")
+    st.caption("Busca, filtra, cierra y notifica casos desde un solo lugar, sin salir de la app.")
 
 st.caption("🎓 Demo didáctica · ⚙️ Funciona con cualquier API compatible con OpenAI · 🔐 La clave vive en secrets.toml")
 
 # 🧠 El detalle técnico queda a un clic, sin ocupar lugar
 with st.expander("🧠 ¿Cómo funciona?"):
-    st.write("**1. 💬 Hablás con Conti.** Describís tu caso como se lo contarías a un compañero. También podés pegar un correo entero.")
+    st.write("**1. 💬 Hablas con Conti.** Describes tu caso como se lo contarías a un compañero. También puedes pegar un correo entero.")
     st.write("**2. 🧠 Conti lo interpreta.** El modelo recibe tu mensaje con un prompt que define el semáforo y devuelve un JSON con el nivel, un resumen, el motivo y las acciones sugeridas.")
-    st.write("**3. ✅ Confirmás y se guarda.** Revisás la clasificación, la corregís si hace falta y el caso queda abierto en **Gestión**, listo para cerrar o notificar a Producción.")
+    st.write("**3. ✅ Confirmas y se guarda.** Revisas la clasificación, la corriges si hace falta y el caso queda abierto en **Gestión**, listo para cerrar o notificar a Producción.")
     st.caption("🎓 Todo el contenido vive en `conti.py`: un prompt, dos funciones y cero magia.")
 
 # ✅ Aviso que se desvanece solo a los 5 segundos
@@ -185,7 +185,7 @@ with tab_chat:
         nivel = SEMAFORO[caso["semaforo"]]
 
         with st.container(border=True):
-            st.subheader("🚦 ¿Confirmás esta clasificación?")
+            st.subheader("🚦 ¿Confirmas esta clasificación?")
             st.write(f"{nivel['emoji']} **{nivel['nombre']}** · {caso['resumen']}")
             st.write(f"🏢 **{caso['nombre'] or 'Sin nombre'}** · 📞 {caso['contacto'] or 'Sin contacto'}")
             st.write(f"💡 **Por qué:** {caso['motivo']}")
@@ -212,7 +212,7 @@ with tab_chat:
         if not api_key:
             st.warning(FALTA_LLAVE)
         else:
-            entrada = st.chat_input("Escribí tu mensaje...")
+            entrada = st.chat_input("Escribe tu mensaje...")
             if entrada:
                 st.session_state.mensajes.append({"role": "user", "content": entrada})
                 with st.chat_message("user"):
@@ -226,7 +226,7 @@ with tab_chat:
                     st.session_state.mensajes.append(
                         {
                             "role": "assistant",
-                            "content": f"{nivel['emoji']} ¡Listo! Clasifiqué tu caso como **{nivel['nombre']}**. Revisá el detalle y confirmalo para guardarlo.",
+                            "content": f"{nivel['emoji']} ¡Listo! Clasifiqué tu caso como **{nivel['nombre']}**. Revisa el detalle y confírmalo para guardarlo.",
                         }
                     )
                 else:
@@ -241,7 +241,7 @@ with tab_texto:
 
 with tab_gestion:
     if not st.session_state.casos:
-        st.info("Todavía no hay casos. Chateá con Conti o pegá un correo para crear el primero.")
+        st.info("Todavía no hay casos. Chatea con Conti o pega un correo para crear el primero.")
     else:
         abiertos = sum(1 for caso in st.session_state.casos if caso["estado"] == "abierto")
         col_abiertos, col_cerrados, col_total = st.columns(3)

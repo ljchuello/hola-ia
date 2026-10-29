@@ -60,13 +60,13 @@ Funciona con cualquier API compatible con OpenAI 🤝:
 
 La pestaña **Chat agéntico** reemplaza al formulario de "Nuevo caso":
 
-1. Conti saluda y te va preguntando de a una cosa: quién sos, cómo contactarte y qué pasó.
-2. Le respondés con lenguaje natural, como en un chat normal. Nada de formatos.
+1. Conti saluda y te va preguntando una cosa a la vez: quién eres, cómo contactarte y qué pasó.
+2. Le respondes con lenguaje natural, como en un chat normal. Nada de formatos.
 3. Cuando Conti cree que ya tiene lo necesario, clasifica el caso con el semáforo.
-4. Antes de guardar, te muestra el resumen y pedís confirmación. Si no quedó bien, seguís hablando.
+4. Antes de guardar, te muestra el resumen y pides confirmación. Si no quedó bien, sigues hablando.
 5. Al confirmar, el caso se guarda como abierto y queda en Gestión.
 
-También podés pegar un correo completo en la pestaña **📋 Pegar correo** y Conti lo clasifica al toque.
+También puedes pegar un correo completo en la pestaña **📋 Pegar correo** y Conti lo clasifica de inmediato.
 
 ## 🗂️ Gestión de casos
 
@@ -82,7 +82,7 @@ Los casos se guardan en `casos.json`, así que sobreviven a una recarga del nave
 
 ## 🧠 Cómo funciona
 
-1. Hablás con Conti en el chat (o pegás un correo completo).
+1. Hablas con Conti en el chat (o pegas un correo completo).
 2. `conti.py` le manda el historial al modelo con un prompt que define el semáforo.
 3. En cada turno el modelo responde un JSON: o hace una pregunta, o entrega la clasificación.
 4. Cuando clasifica, la app te muestra el resumen para confirmar antes de guardar.

@@ -45,6 +45,15 @@ Los emojis son parte del estilo del proyecto. Úsalos con naturalidad, sin satur
 - ❌ En nombres de variables, funciones, archivos, rutas, claves de diccionarios o JSON.
 - 📏 Máximo uno por bloque o encabezado, y nunca dos seguidos.
 
+## 🗣️ Idioma
+
+Todo el texto se escribe en **español neutro**, dentro y fuera del proyecto.
+
+- ✅ Trato con **tú** en toda la interfaz, los prompts, el README y las respuestas del agente.
+- ❌ Nada de voseo: `vos`, `tenés`, `podés`, `hacé`, `escribí`, `revisá`, `confirmalo`.
+- ❌ Nada de regionalismos: `al toque`, `planilla`, `alícuota`, `che`, `laburo`.
+- ✅ Las respuestas del agente también son en español neutro, incluso fuera del proyecto.
+
 ## 🧱 Stack
 
 - Python 3.10+
@@ -61,5 +70,5 @@ streamlit run app.py
 ## 📐 Convenciones
 
 - `snake_case` para variables y funciones.
-- Español para todo lo que ve el usuario.
+- Español neutro para todo lo que ve el usuario y para las respuestas del agente.
 - Commits con un emoji al inicio: `✨ feat:`, `🐛 fix:`, `📝 docs:`.
