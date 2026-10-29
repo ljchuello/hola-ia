@@ -58,12 +58,97 @@ api_key = leer_secreto("LLM_API_KEY") or os.getenv("LLM_API_KEY", "")
 base_url = leer_secreto("LLM_BASE_URL") or os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
 modelo = leer_secreto("LLM_MODEL") or os.getenv("LLM_MODEL", "gpt-4o-mini")
 
-st.title("🎯 Conti Clasificador")
-st.write("Hablá con Conti, pegá un correo o gestioná tus casos. Conti le pone semáforo 🚦 para que Producción sepa qué atender primero.")
+# 🌗 Los colores de cada tema, en un solo lugar
+TEMAS = {
+    "oscuro": {"fondo": "#0e1117", "panel": "#262730", "texto": "#fafafa", "suave": "#a3a8b8", "borde": "#3a3d4a"},
+    "claro": {"fondo": "#ffffff", "panel": "#f0f2f6", "texto": "#31333f", "suave": "#6b7280", "borde": "#d5d8e0"},
+}
 
-# ✅ Aviso de la última notificación
+
+# 🎨 Repintamos la app con los colores del tema elegido
+def pintar_tema(nombre):
+    c = TEMAS[nombre]
+    st.html(
+        f"""<style>
+        .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {{ background: {c['fondo']} !important; }}
+        [data-testid="stMarkdownContainer"] :is(p, h1, h2, h3, h4, h5, h6, li, span, strong, em) {{ color: {c['texto']} !important; }}
+        [data-testid="stCaptionContainer"] :is(p, span, small) {{ color: {c['suave']} !important; }}
+        [data-testid="stWidgetLabel"] :is(label, p), [data-testid="stMetricLabel"], [data-testid="stMetricValue"],
+        [data-testid="stToolbar"] button {{ color: {c['texto']} !important; }}
+        [data-testid="stTabs"] button {{ color: {c['suave']} !important; }}
+        [data-testid="stTabs"] button[aria-selected="true"] {{ color: {c['texto']} !important; }}
+        [data-testid="stChatInput"], [data-testid="stChatInput"] div {{ background: transparent !important; }}
+        [data-testid="stChatInput"] {{ background: {c['panel']} !important; border: 1px solid {c['borde']} !important; border-radius: 12px; }}
+        [data-testid="stChatInputTextArea"] {{ color: {c['texto']} !important; }}
+        [data-testid="stChatInputTextArea"]::placeholder {{ color: {c['suave']} !important; opacity: 1; }}
+        [data-testid="stTextArea"] textarea::placeholder, [data-testid="stTextInput"] input::placeholder {{ color: {c['suave']} !important; }}
+        [data-testid="stTextAreaRootElement"], [data-testid="stTextInputRootElement"],
+        [data-testid="stSelectbox"] div {{
+            background: {c['panel']} !important; border-color: {c['borde']} !important; color: {c['texto']} !important;
+        }}
+        [data-testid="stSelectbox"] :is(input, button) {{ color: {c['texto']} !important; }}
+        [data-baseweb="popover"] :is(ul, li) {{ background: {c['panel']} !important; color: {c['texto']} !important; }}
+        [data-testid="stTextArea"] textarea, [data-testid="stTextInput"] input {{ color: {c['texto']} !important; }}
+        [data-testid="stVerticalBlockBorderWrapper"] {{ background: {c['panel']} !important; border-color: {c['borde']} !important; }}
+        [data-testid="stExpander"] details {{
+            background: {c['panel']} !important; border: 1px solid {c['borde']} !important; border-radius: 8px;
+        }}
+        [data-testid="stExpander"] summary {{ background: transparent !important; }}
+        [data-testid="stChatMessage"] {{ background: {c['panel']} !important; border-radius: 12px; }}
+        [data-testid="stBaseButton-secondary"], [data-testid="stBaseButton-secondaryFormSubmit"] {{
+            background: {c['panel']} !important; color: {c['texto']} !important; border: 1px solid {c['borde']} !important;
+        }}
+        [data-testid="stBaseButton-secondary"] :is(p, span), [data-testid="stBaseButton-secondaryFormSubmit"] :is(p, span) {{
+            color: {c['texto']} !important;
+        }}
+        [data-testid="stAlert"] :is(p, span) {{ color: #fafafa !important; }}
+        </style>""",
+    )
+
+
+# 🕹️ El interruptor vive arriba a la derecha, junto al título
+col_titulo, col_tema = st.columns([5, 1], vertical_alignment="center")
+with col_titulo:
+    st.title("🎯 Conti Clasificador")
+with col_tema:
+    oscuro = st.toggle("🌙 Oscuro", value=True, key="modo_oscuro")
+
+pintar_tema("oscuro" if oscuro else "claro")
+
+# 📖 Qué es y qué hace, para que cualquiera entienda el proyecto de entrada
+st.write(
+    "**Conti Clasificador** es un asistente de IA que pone orden en el caos del soporte 🚦 "
+    "Recibe cada pedido —por chat o pegando un correo completo—, entiende qué está pasando y lo "
+    "clasifica en un semáforo de urgencia para que Producción sepa **qué atender primero y qué puede esperar**."
+)
+st.write(
+    "Sin formularios eternos ni planillas a mano: contás tu caso en tus palabras y Conti devuelve "
+    "un resumen, el motivo de la clasificación y los próximos pasos, listo para confirmar y guardar."
+)
+
+col_conversa, col_clasifica, col_gestion = st.columns(3)
+with col_conversa:
+    st.markdown("#### 💬 Conversá")
+    st.caption("Describí tu caso en lenguaje natural. Conti pregunta lo justo, una cosa a la vez, y nada más.")
+with col_clasifica:
+    st.markdown("#### 🚦 Clasificá")
+    st.caption("Semáforo de urgencia con SLA: 🔴 15 minutos · 🟡 mismo día · 🟢 24-48 horas.")
+with col_gestion:
+    st.markdown("#### 🗂️ Gestioná")
+    st.caption("Buscá, filtrá, cerrá y notificá casos desde un solo lugar, sin salir de la app.")
+
+st.caption("🎓 Demo didáctica · ⚙️ Funciona con cualquier API compatible con OpenAI · 🔐 La clave vive en secrets.toml")
+
+# 🧠 El detalle técnico queda a un clic, sin ocupar lugar
+with st.expander("🧠 ¿Cómo funciona?"):
+    st.write("**1. 💬 Hablás con Conti.** Describís tu caso como se lo contarías a un compañero. También podés pegar un correo entero.")
+    st.write("**2. 🧠 Conti lo interpreta.** El modelo recibe tu mensaje con un prompt que define el semáforo y devuelve un JSON con el nivel, un resumen, el motivo y las acciones sugeridas.")
+    st.write("**3. ✅ Confirmás y se guarda.** Revisás la clasificación, la corregís si hace falta y el caso queda abierto en **Gestión**, listo para cerrar o notificar a Producción.")
+    st.caption("🎓 Todo el contenido vive en `conti.py`: un prompt, dos funciones y cero magia.")
+
+# ✅ Aviso que se desvanece solo a los 5 segundos
 if "aviso" in st.session_state:
-    st.success(st.session_state.pop("aviso"))
+    st.toast(st.session_state.pop("aviso"), duration=5)
 
 # 📥 Tres pestañas: charlar, pegar correo y gestionar
 tab_chat, tab_texto, tab_gestion = st.tabs(["💬 Chat agéntico", "📋 Pegar correo", "🗂️ Gestión"])
@@ -125,7 +210,11 @@ with tab_chat:
             entrada = st.chat_input("Escribí tu mensaje...")
             if entrada:
                 st.session_state.mensajes.append({"role": "user", "content": entrada})
-                respuesta = conversar(st.session_state.mensajes, api_key, base_url, modelo)
+                with st.chat_message("user"):
+                    st.write(entrada)
+                with st.chat_message("assistant"):
+                    with st.spinner("Conti está pensando..."):
+                        respuesta = conversar(st.session_state.mensajes, api_key, base_url, modelo)
                 if respuesta.get("tipo") == "clasificacion":
                     st.session_state.pendiente = respuesta
                     nivel = SEMAFORO[respuesta["semaforo"]]
@@ -225,7 +314,8 @@ if enviar_texto and not api_key:
 
 # 🚦 Clasificamos el correo pegado y lo guardamos como abierto
 if enviar_texto:
-    resultado = clasificar(texto, api_key, base_url, modelo)
+    with st.spinner("Clasificando el correo..."):
+        resultado = clasificar(texto, api_key, base_url, modelo)
     st.session_state.ultimo = {
         "id": max((caso["id"] for caso in st.session_state.casos), default=0) + 1,
         "nombre": resultado.get("nombre", ""),
@@ -273,6 +363,10 @@ if "ultimo" in st.session_state:
             guardar_casos(st.session_state.casos)
             st.rerun()
 
-# ❤️ Firma del proyecto
+# ❤️ Firma del proyecto (el span fuerza la fuente de emojis a color)
 st.divider()
-st.caption("Realizado por 99% robot 🤖, 1% humano 🧑 y 100% amor ❤️")
+st.caption(
+    "Realizado por 99% robot <span style=\"font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji'\">🤖</span>, "
+    "1% humano 🧑 y 100% amor ❤️",
+    unsafe_allow_html=True,
+)
