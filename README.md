@@ -86,7 +86,7 @@ Los casos se guardan en `casos.json`, así que sobreviven a una recarga del nave
 2. `conti.py` le manda el historial al modelo con un prompt que define el semáforo.
 3. En cada turno el modelo responde un JSON: o hace una pregunta, o entrega la clasificación.
 4. Cuando clasifica, la app te muestra el resumen para confirmar antes de guardar.
-5. El caso se guarda como **abierto**, pinta la tarjeta y queda en **Gestión**.
+5. El caso se guarda como **abierto**, aparece un aviso y queda en **Gestión**.
 6. En **Gestión** puedes buscarlo, cerrarlo, reabrirlo o notificarlo.
 
 ## 📁 Archivos

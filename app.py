@@ -10,6 +10,7 @@ from streamlit.errors import StreamlitSecretNotFoundError
 from conti import SEMAFORO, clasificar, conversar, notificar
 
 RUTA_CASOS = "casos.json"
+FALTA_LLAVE = "Falta configurar LLM_API_KEY en .streamlit/secrets.toml 🔑"
 
 st.set_page_config(page_title="Conti Clasificador", page_icon="🎯")
 
@@ -27,12 +28,31 @@ def guardar_casos(casos):
         json.dump(casos, archivo, ensure_ascii=False, indent=2)
 
 
-# 🔐 Leemos la clave desde secrets.toml o desde una variable de entorno
-def leer_secreto(clave, defecto=""):
+# 💾 Armamos el caso, lo guardamos y lo devolvemos
+def guardar_caso(nombre, contacto, motivo_contacto, resultado):
+    caso = {
+        "id": max((c["id"] for c in st.session_state.casos), default=0) + 1,
+        "nombre": nombre,
+        "contacto": contacto,
+        "motivo_contacto": motivo_contacto,
+        "semaforo": resultado["semaforo"],
+        "explicacion": resultado["motivo"],
+        "acciones": resultado["acciones"],
+        "estado": "abierto",
+        "notificado": False,
+        "fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
+    }
+    st.session_state.casos.append(caso)
+    guardar_casos(st.session_state.casos)
+    return caso
+
+
+# 🔐 Leemos la clave desde secrets.toml sin rompernos si el archivo no existe
+def leer_secreto(clave):
     try:
-        return st.secrets.get(clave, defecto)
+        return st.secrets.get(clave, "")
     except StreamlitSecretNotFoundError:
-        return defecto
+        return ""
 
 
 # 💬 Cada conversación con Conti arranca con un saludo y una primera pregunta
@@ -72,12 +92,12 @@ def pintar_tema(nombre):
         f"""<style>
         .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {{ background: {c['fondo']} !important; }}
         [data-testid="stMarkdownContainer"] :is(p, h1, h2, h3, h4, h5, h6, li, span, strong, em) {{ color: {c['texto']} !important; }}
+        [data-testid="stTab"] p {{ color: {c['suave']} !important; }}
+        [data-testid="stTab"][aria-selected="true"] p {{ color: {c['texto']} !important; }}
         [data-testid="stCaptionContainer"] :is(p, span, small) {{ color: {c['suave']} !important; }}
         [data-testid="stWidgetLabel"] :is(label, p), [data-testid="stMetricLabel"], [data-testid="stMetricValue"],
         [data-testid="stToolbar"] button {{ color: {c['texto']} !important; }}
-        [data-testid="stTabs"] button {{ color: {c['suave']} !important; }}
-        [data-testid="stTabs"] button[aria-selected="true"] {{ color: {c['texto']} !important; }}
-        [data-testid="stChatInput"], [data-testid="stChatInput"] div {{ background: transparent !important; }}
+        [data-testid="stChatInput"] div {{ background: transparent !important; }}
         [data-testid="stChatInput"] {{ background: {c['panel']} !important; border: 1px solid {c['borde']} !important; border-radius: 12px; }}
         [data-testid="stChatInputTextArea"] {{ color: {c['texto']} !important; }}
         [data-testid="stChatInputTextArea"]::placeholder {{ color: {c['suave']} !important; opacity: 1; }}
@@ -89,7 +109,6 @@ def pintar_tema(nombre):
         [data-testid="stSelectbox"] :is(input, button) {{ color: {c['texto']} !important; }}
         [data-baseweb="popover"] :is(ul, li) {{ background: {c['panel']} !important; color: {c['texto']} !important; }}
         [data-testid="stTextArea"] textarea, [data-testid="stTextInput"] input {{ color: {c['texto']} !important; }}
-        [data-testid="stVerticalBlockBorderWrapper"] {{ background: {c['panel']} !important; border-color: {c['borde']} !important; }}
         [data-testid="stExpander"] details {{
             background: {c['panel']} !important; border: 1px solid {c['borde']} !important; border-radius: 8px;
         }}
@@ -176,21 +195,7 @@ with tab_chat:
 
             col_si, col_no = st.columns(2)
             if col_si.button("✅ Confirmar y guardar", use_container_width=True):
-                st.session_state.ultimo = {
-                    "id": max((c["id"] for c in st.session_state.casos), default=0) + 1,
-                    "nombre": caso.get("nombre", ""),
-                    "contacto": caso.get("contacto", ""),
-                    "motivo_contacto": caso.get("resumen", ""),
-                    "semaforo": caso["semaforo"],
-                    "resumen": caso.get("resumen", ""),
-                    "explicacion": caso.get("motivo", ""),
-                    "acciones": caso.get("acciones", []),
-                    "estado": "abierto",
-                    "notificado": False,
-                    "fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
-                }
-                st.session_state.casos.append(st.session_state.ultimo)
-                guardar_casos(st.session_state.casos)
+                guardar_caso(caso.get("nombre", ""), caso.get("contacto", ""), caso.get("resumen", ""), caso)
                 st.session_state.aviso = "¡Caso guardado! 🎉"
                 st.session_state.mensajes = chat_nuevo()
                 st.session_state.pendiente = None
@@ -205,7 +210,7 @@ with tab_chat:
     else:
         # 🔑 Sin llave no hay magia
         if not api_key:
-            st.warning("Falta configurar LLM_API_KEY en .streamlit/secrets.toml 🔑")
+            st.warning(FALTA_LLAVE)
         else:
             entrada = st.chat_input("Escribí tu mensaje...")
             if entrada:
@@ -309,59 +314,16 @@ with tab_gestion:
 
 # 🔑 Sin llave no hay magia
 if enviar_texto and not api_key:
-    st.warning("Falta configurar LLM_API_KEY en .streamlit/secrets.toml 🔑")
+    st.warning(FALTA_LLAVE)
     st.stop()
 
 # 🚦 Clasificamos el correo pegado y lo guardamos como abierto
 if enviar_texto:
     with st.spinner("Clasificando el correo..."):
         resultado = clasificar(texto, api_key, base_url, modelo)
-    st.session_state.ultimo = {
-        "id": max((caso["id"] for caso in st.session_state.casos), default=0) + 1,
-        "nombre": resultado.get("nombre", ""),
-        "contacto": resultado.get("contacto", ""),
-        "motivo_contacto": texto,
-        "semaforo": resultado["semaforo"],
-        "resumen": resultado["resumen"],
-        "explicacion": resultado["motivo"],
-        "acciones": resultado["acciones"],
-        "estado": "abierto",
-        "notificado": False,
-        "fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
-    }
-    st.session_state.casos.append(st.session_state.ultimo)
-    guardar_casos(st.session_state.casos)
+    guardar_caso(resultado.get("nombre", ""), resultado.get("contacto", ""), texto, resultado)
+    st.session_state.aviso = "🚦 Correo clasificado y guardado"
     st.rerun()
-
-# 🚦 Tarjeta con el último caso clasificado
-if "ultimo" in st.session_state:
-    caso = st.session_state.ultimo
-    nivel = SEMAFORO[caso["semaforo"]]
-    mensaje = f"{nivel['emoji']} **{nivel['nombre']}** · {caso['resumen']}"
-
-    st.subheader("🚦 Último caso clasificado")
-    if caso["semaforo"] == "rojo":
-        st.error(mensaje)
-    elif caso["semaforo"] == "amarillo":
-        st.warning(mensaje)
-    else:
-        st.success(mensaje)
-
-    st.write(f"🏢 **{caso['nombre'] or 'Sin nombre'}** · 📞 {caso['contacto'] or 'Sin contacto'}")
-    st.write(f"💡 **Por qué:** {caso['explicacion']}")
-    st.write(f"⏱️ **SLA:** {nivel['sla']}")
-    st.write("✅ **Acciones sugeridas:**")
-    for accion in caso["acciones"]:
-        st.write(f"- {accion}")
-
-    if caso["notificado"]:
-        st.caption("📣 Ya notificado a Producción")
-    else:
-        if st.button("📣 Notificar a Producción"):
-            st.session_state.aviso = notificar(caso)
-            caso["notificado"] = True
-            guardar_casos(st.session_state.casos)
-            st.rerun()
 
 # ❤️ Firma del proyecto (el span fuerza la fuente de emojis a color)
 st.divider()
