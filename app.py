@@ -65,6 +65,19 @@ def chat_nuevo():
     ]
 
 
+# 🎯 Cada mensaje nuevo lleva la vista y el cursor al campo de texto
+def enfocar_campo():
+    st.iframe(
+        f"""<script>
+        setTimeout(() => {{
+            const campo = window.parent.document.querySelector('[data-testid="stChatInputTextArea"]');
+            if (campo) {{ campo.scrollIntoView({{behavior:"smooth", block:"center"}}); campo.focus(); }}
+        }}, 300);
+        </script><!-- {len(st.session_state.mensajes)} -->""",
+        height=1,
+    )
+
+
 if "casos" not in st.session_state:
     st.session_state.casos = cargar_casos()
 
@@ -75,8 +88,8 @@ if "pendiente" not in st.session_state:
     st.session_state.pendiente = None
 
 api_key = leer_secreto("LLM_API_KEY") or os.getenv("LLM_API_KEY", "")
-base_url = leer_secreto("LLM_BASE_URL") or os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
-modelo = leer_secreto("LLM_MODEL") or os.getenv("LLM_MODEL", "gpt-4o-mini")
+base_url = leer_secreto("LLM_BASE_URL") or os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1")
+modelo = leer_secreto("LLM_MODEL") or os.getenv("LLM_MODEL", "deepseek/deepseek-v4.1-flash-1017")
 
 # 🌗 Los colores de cada tema, en un solo lugar
 TEMAS = {
@@ -91,6 +104,7 @@ def pintar_tema(nombre):
     st.html(
         f"""<style>
         .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {{ background: {c['fondo']} !important; }}
+        [data-testid="stMainBlockContainer"], .block-container {{ max-width: 1000px !important; }}
         [data-testid="stMarkdownContainer"] :is(p, h1, h2, h3, h4, h5, h6, li, span, strong, em) {{ color: {c['texto']} !important; }}
         [data-testid="stTab"] p {{ color: {c['suave']} !important; }}
         [data-testid="stTab"][aria-selected="true"] p {{ color: {c['texto']} !important; }}
@@ -156,14 +170,27 @@ with col_gestion:
     st.markdown("#### 🗂️ Gestiona")
     st.caption("Busca, filtra, cierra y notifica casos desde un solo lugar, sin salir de la app.")
 
-st.caption("🎓 Demo didáctica · ⚙️ Funciona con cualquier API compatible con OpenAI · 🔐 La clave vive en secrets.toml")
-
-# 🧠 El detalle técnico queda a un clic, sin ocupar lugar
+# 🧠 Los tres desplegables: qué hace, para quién es y cómo está hecho
 with st.expander("🧠 ¿Cómo funciona?"):
     st.write("**1. 💬 Hablas con Conti.** Describes tu caso como se lo contarías a un compañero. También puedes pegar un correo entero.")
     st.write("**2. 🧠 Conti lo interpreta.** El modelo recibe tu mensaje con un prompt que define el semáforo y devuelve un JSON con el nivel, un resumen, el motivo y las acciones sugeridas.")
     st.write("**3. ✅ Confirmas y se guarda.** Revisas la clasificación, la corriges si hace falta y el caso queda abierto en **Gestión**, listo para cerrar o notificar a Producción.")
     st.caption("🎓 Todo el contenido vive en `conti.py`: un prompt, dos funciones y cero magia.")
+
+with st.expander("🏢 ¿Para quién es?"):
+    st.write(
+        "Conti Clasificador es la demo de una propuesta para **Sermatick Cia Ltda**, empresa de desarrollo de "
+        "software que ofrece un sistema de facturación electrónica como servicio. La usa el personal de soporte, "
+        "la primera línea frente al cliente, para ordenar y priorizar cada caso; lo que escala llega al "
+        "**departamento de Producción** ya clasificado. El objetivo es servir de MVP para presentar la propuesta "
+        "e implementarla después en producción."
+    )
+
+with st.expander("🛠️ ¿Cómo está construido?"):
+    st.write("**🧠 El prompt.** Un texto en `conti.py` define el semáforo; no hay reglas escondidas en el código.")
+    st.write("**🤝 El SDK.** Las llamadas usan el **SDK de OpenAI**, así que sirve cualquier API compatible.")
+    st.write("**🌐 El modelo.** El proveedor es **OpenRouter** con el modelo **DeepSeek V4 Flash**.")
+    st.write("**🔐 Los secretos.** La API key y la URL viven en `.streamlit/secrets.toml`, ignorado por git; la plantilla pública es `secrets.example.toml`.")
 
 # ✅ Aviso que se desvanece solo a los 5 segundos
 if "aviso" in st.session_state:
@@ -232,6 +259,9 @@ with tab_chat:
                 else:
                     st.session_state.mensajes.append({"role": "assistant", "content": respuesta.get("mensaje", "")})
                 st.rerun()
+
+    # 🎯 Cada mensaje nuevo lleva la vista y el cursor al campo de texto
+    enfocar_campo()
 
 # 📋 Pestaña 2: pegar un correo completo
 with tab_texto:

@@ -4,6 +4,14 @@ Una muestra mínima de cómo usar un LLM para clasificar casos de soporte **conv
 
 > ⚠️ Proyecto demostrativo. No es para producción: guarda los casos en un JSON local, no valida errores y no envía notificaciones reales.
 
+## 🏢 ¿Para quién es?
+
+Conti Clasificador es la demo de una propuesta para **Sermatick Cia Ltda**, empresa de desarrollo de software que ofrece un sistema de facturación electrónica como servicio.
+
+- 🎯 **Objetivo:** servir de MVP para presentar la propuesta e implementarla después en producción.
+- 🧑‍💻 **Quién lo usa:** el personal de soporte, la primera línea frente al cliente.
+- 🗂️ **Qué resuelve:** ordena y prioriza los casos antes de que escalen al departamento de Producción.
+
 ## 🚦 El semáforo
 
 | Color | Nombre | Qué significa | SLA |
@@ -48,8 +56,8 @@ El orden de prioridad es: `secrets.toml` → variable de entorno. Si no hay clav
 | Variable | Por defecto |
 | --- | --- |
 | `LLM_API_KEY` | vacío |
-| `LLM_BASE_URL` | `https://api.openai.com/v1` |
-| `LLM_MODEL` | `gpt-4o-mini` |
+| `LLM_BASE_URL` | `https://openrouter.ai/api/v1` |
+| `LLM_MODEL` | `deepseek/deepseek-v4.1-flash-1017` |
 
 Funciona con cualquier API compatible con OpenAI 🤝:
 
@@ -90,6 +98,15 @@ Los casos se guardan en `casos.json`, así que sobreviven a una recarga del nave
 4. Cuando clasifica, la app te muestra el resumen para confirmar antes de guardar.
 5. El caso se guarda como **abierto**, aparece un aviso y queda en **Gestión**.
 6. En **Gestión** puedes buscarlo, cerrarlo, reabrirlo o notificarlo.
+
+### 🛠️ ¿Cómo está construido?
+
+- 🧠 **Prompt:** un texto en `conti.py` le dice al modelo cómo clasificar; no hay reglas escondidas en el código.
+- 🤝 **SDK:** las llamadas se hacen con el **SDK de OpenAI**, así funciona con cualquier API compatible.
+- 🌐 **Proveedor:** el modelo es **DeepSeek V4 Flash** (`deepseek/deepseek-v4.1-flash-1017`), servido a través de **OpenRouter**.
+- 🔐 **Secretos:** la API key y la dirección del proveedor viven en `.streamlit/secrets.toml`, ignorado por git. La plantilla pública es `secrets.example.toml`.
+
+Cambiar de proveedor o de modelo es cambiar esas dos líneas de secretos, sin tocar el código.
 
 ## 📁 Archivos
 
