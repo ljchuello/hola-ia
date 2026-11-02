@@ -98,7 +98,18 @@ Regla de oro: si dudas entre rojo y amarillo, elige rojo.
 
 
 def clasificar(caso: str, api_key: str, base_url: str, modelo: str) -> dict:
-    """Le manda el caso a la IA y devuelve el JSON convertido a diccionario."""
+    """Le manda el caso a la IA y devuelve el JSON convertido a diccionario.
+
+    Args:
+        caso: El texto del caso de soporte a clasificar.
+        api_key: La clave de la API del proveedor.
+        base_url: La URL base del proveedor compatible con OpenAI.
+        modelo: El nombre del modelo a usar.
+
+    Returns:
+        El caso clasificado como diccionario, o un diccionario vacío si la
+        respuesta no se puede leer como JSON.
+    """
     cliente = OpenAI(api_key=api_key, base_url=base_url)
     respuesta = cliente.chat.completions.create(
         model=modelo,
@@ -109,11 +120,25 @@ def clasificar(caso: str, api_key: str, base_url: str, modelo: str) -> dict:
             {"role": "user", "content": caso},
         ],
     )
-    return json.loads(respuesta.choices[0].message.content)
+    try:
+        return json.loads(respuesta.choices[0].message.content)
+    except Exception:
+        return {}
 
 
 def conversar(mensajes: list, api_key: str, base_url: str, modelo: str) -> dict:
-    """Le manda el historial del chat a la IA y devuelve su respuesta JSON."""
+    """Le manda el historial del chat a la IA y devuelve su respuesta JSON.
+
+    Args:
+        mensajes: El historial de la conversación con los roles y contenidos.
+        api_key: La clave de la API del proveedor.
+        base_url: La URL base del proveedor compatible con OpenAI.
+        modelo: El nombre del modelo a usar.
+
+    Returns:
+        La respuesta de Conti como diccionario, o un diccionario vacío si la
+        respuesta no se puede leer como JSON.
+    """
     cliente = OpenAI(api_key=api_key, base_url=base_url)
     respuesta = cliente.chat.completions.create(
         model=modelo,
@@ -124,10 +149,23 @@ def conversar(mensajes: list, api_key: str, base_url: str, modelo: str) -> dict:
             *mensajes,
         ],
     )
-    return json.loads(respuesta.choices[0].message.content)
+    try:
+        return json.loads(respuesta.choices[0].message.content)
+    except Exception:
+        return {}
 
 
 def notificar(clasificacion: dict) -> str:
-    """Arma el mensaje que se 'envía' al equipo de Producción."""
-    nivel = SEMAFORO[clasificacion["semaforo"]]
+    """Arma el mensaje que se 'envía' al equipo de Producción.
+
+    Args:
+        clasificacion: El caso clasificado con su nivel de semáforo.
+
+    Returns:
+        El mensaje de notificación con el emoji, el nombre y el SLA del nivel,
+        o un mensaje genérico si el nivel no existe.
+    """
+    nivel = SEMAFORO.get(clasificacion.get("semaforo"))
+    if not nivel:
+        return "📣 Caso notificado a Producción · SLA: a definir"
     return f"{nivel['emoji']} Caso {nivel['nombre']} notificado a Producción · SLA: {nivel['sla']}"

@@ -16,20 +16,50 @@ st.set_page_config(page_title="Conti Clasificador", page_icon="🎯")
 
 
 # 💾 Guardamos los casos en un JSON para que sobrevivan a la recarga
-def cargar_casos():
+def cargar_casos() -> list:
+    """Lee los casos guardados en el archivo JSON.
+
+    Returns:
+        La lista de casos, o una lista vacía si el archivo no existe o está dañado.
+    """
     if not os.path.exists(RUTA_CASOS):
         return []
-    with open(RUTA_CASOS, encoding="utf-8") as archivo:
-        return json.load(archivo)
+    try:
+        with open(RUTA_CASOS, encoding="utf-8") as archivo:
+            return json.load(archivo)
+    except Exception:
+        return []
 
 
-def guardar_casos(casos):
-    with open(RUTA_CASOS, "w", encoding="utf-8") as archivo:
-        json.dump(casos, archivo, ensure_ascii=False, indent=2)
+def guardar_casos(casos: list) -> None:
+    """Escribe la lista de casos en el archivo JSON.
+
+    Args:
+        casos: La lista completa de casos a guardar.
+
+    Returns:
+        Nada.
+    """
+    try:
+        with open(RUTA_CASOS, "w", encoding="utf-8") as archivo:
+            json.dump(casos, archivo, ensure_ascii=False, indent=2)
+    except Exception:
+        st.error("No se pudo guardar el archivo de casos 💾")
 
 
 # 💾 Armamos el caso, lo guardamos y lo devolvemos
-def guardar_caso(nombre, contacto, motivo_contacto, resultado):
+def guardar_caso(nombre: str, contacto: str, motivo_contacto: str, resultado: dict) -> dict:
+    """Arma el caso, lo agrega a la sesión, lo guarda y lo devuelve.
+
+    Args:
+        nombre: El nombre de la empresa o persona que reporta.
+        contacto: El teléfono o correo de contacto.
+        motivo_contacto: El texto original del caso.
+        resultado: La clasificación devuelta por la IA.
+
+    Returns:
+        El caso guardado como diccionario.
+    """
     caso = {
         "id": max((c["id"] for c in st.session_state.casos), default=0) + 1,
         "nombre": nombre,
@@ -48,7 +78,15 @@ def guardar_caso(nombre, contacto, motivo_contacto, resultado):
 
 
 # 🔐 Leemos la clave desde secrets.toml sin rompernos si el archivo no existe
-def leer_secreto(clave):
+def leer_secreto(clave: str) -> str:
+    """Lee un valor de secrets.toml sin romper la app si no existe el archivo.
+
+    Args:
+        clave: El nombre del secreto a leer.
+
+    Returns:
+        El valor del secreto, o una cadena vacía si no está disponible.
+    """
     try:
         return st.secrets.get(clave, "")
     except StreamlitSecretNotFoundError:
@@ -56,7 +94,12 @@ def leer_secreto(clave):
 
 
 # 💬 Cada conversación con Conti arranca con un saludo y una primera pregunta
-def chat_nuevo():
+def chat_nuevo() -> list:
+    """Devuelve el historial con el saludo inicial de Conti.
+
+    Returns:
+        Una lista con el primer mensaje del asistente.
+    """
     return [
         {
             "role": "assistant",
@@ -66,7 +109,12 @@ def chat_nuevo():
 
 
 # 🎯 Cada mensaje nuevo lleva la vista y el cursor al campo de texto
-def enfocar_campo():
+def enfocar_campo() -> None:
+    """Lleva el cursor al campo de texto después de cada mensaje.
+
+    Returns:
+        Nada.
+    """
     st.iframe(
         f"""<script>
         setTimeout(() => {{
@@ -99,7 +147,15 @@ TEMAS = {
 
 
 # 🎨 Repintamos la app con los colores del tema elegido
-def pintar_tema(nombre):
+def pintar_tema(nombre: str) -> None:
+    """Aplica los colores del tema elegido a la app.
+
+    Args:
+        nombre: El tema a usar, "oscuro" o "claro".
+
+    Returns:
+        Nada.
+    """
     c = TEMAS[nombre]
     st.html(
         f"""<style>
