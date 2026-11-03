@@ -17,10 +17,14 @@ st.set_page_config(page_title="Conti Clasificador", page_icon="🎯")
 
 # 💾 Guardamos los casos en un JSON para que sobrevivan a la recarga
 def cargar_casos() -> list:
-    """Lee los casos guardados en el archivo JSON.
+    """Recupera los casos guardados en disco.
 
-    Returns:
-        La lista de casos, o una lista vacía si el archivo no existe o está dañado.
+    Lee el JSON donde vive el historial para que los casos sobrevivan a la recarga
+    de la página.
+
+    Devuelve:
+        La lista de casos guardados, o una lista vacía si el archivo no existe o
+        está dañado.
     """
     if not os.path.exists(RUTA_CASOS):
         return []
@@ -32,12 +36,14 @@ def cargar_casos() -> list:
 
 
 def guardar_casos(casos: list) -> None:
-    """Escribe la lista de casos en el archivo JSON.
+    """Guarda en disco la lista completa de casos.
 
-    Args:
-        casos: La lista completa de casos a guardar.
+    Escribe el historial en el JSON para que no se pierda al recargar la página.
 
-    Returns:
+    Argumentos:
+        casos: La lista de casos que vive en la sesión.
+
+    Devuelve:
         Nada.
     """
     try:
@@ -49,16 +55,19 @@ def guardar_casos(casos: list) -> None:
 
 # 💾 Armamos el caso, lo guardamos y lo devolvemos
 def guardar_caso(nombre: str, contacto: str, motivo_contacto: str, resultado: dict) -> dict:
-    """Arma el caso, lo agrega a la sesión, lo guarda y lo devuelve.
+    """Crea un caso nuevo a partir de la clasificación y lo deja guardado.
 
-    Args:
-        nombre: El nombre de la empresa o persona que reporta.
-        contacto: El teléfono o correo de contacto.
-        motivo_contacto: El texto original del caso.
-        resultado: La clasificación devuelta por la IA.
+    Junta los datos de contacto con lo que devolvió la IA, le asigna un id y una
+    fecha, lo agrega a la sesión y lo escribe en el JSON.
 
-    Returns:
-        El caso guardado como diccionario.
+    Argumentos:
+        nombre: Quién reporta el caso, sea empresa o persona.
+        contacto: Cómo responderle, sea teléfono o correo.
+        motivo_contacto: El texto original con el que se abrió el caso.
+        resultado: La clasificación que devolvió la IA.
+
+    Devuelve:
+        El caso ya armado como diccionario, tal como quedó guardado.
     """
     caso = {
         "id": max((c["id"] for c in st.session_state.casos), default=0) + 1,
@@ -79,13 +88,16 @@ def guardar_caso(nombre: str, contacto: str, motivo_contacto: str, resultado: di
 
 # 🔐 Leemos la clave desde secrets.toml sin rompernos si el archivo no existe
 def leer_secreto(clave: str) -> str:
-    """Lee un valor de secrets.toml sin romper la app si no existe el archivo.
+    """Busca un secreto en la configuración sin tumbar la app.
 
-    Args:
-        clave: El nombre del secreto a leer.
+    Lee el valor desde secrets.toml y, si el archivo no existe o la clave no está,
+    sigue adelante con un valor vacío.
 
-    Returns:
-        El valor del secreto, o una cadena vacía si no está disponible.
+    Argumentos:
+        clave: El nombre del secreto que se quiere leer.
+
+    Devuelve:
+        El valor encontrado, o una cadena vacía si no está disponible.
     """
     try:
         return st.secrets.get(clave, "")
@@ -95,10 +107,13 @@ def leer_secreto(clave: str) -> str:
 
 # 💬 Cada conversación con Conti arranca con un saludo y una primera pregunta
 def chat_nuevo() -> list:
-    """Devuelve el historial con el saludo inicial de Conti.
+    """Abre una conversación nueva con el saludo inicial de Conti.
 
-    Returns:
-        Una lista con el primer mensaje del asistente.
+    El historial arranca con una sola intervención del asistente que saluda y
+    pregunta quién escribe.
+
+    Devuelve:
+        El historial con un único mensaje del asistente.
     """
     return [
         {
@@ -110,9 +125,12 @@ def chat_nuevo() -> list:
 
 # 🎯 Cada mensaje nuevo lleva la vista y el cursor al campo de texto
 def enfocar_campo() -> None:
-    """Lleva el cursor al campo de texto después de cada mensaje.
+    """Lleva la vista y el cursor al campo de texto del chat.
 
-    Returns:
+    Se ejecuta después de cada mensaje para que la persona pueda seguir escribiendo
+    sin tener que buscar el campo con el mouse.
+
+    Devuelve:
         Nada.
     """
     st.iframe(
@@ -148,12 +166,15 @@ TEMAS = {
 
 # 🎨 Repintamos la app con los colores del tema elegido
 def pintar_tema(nombre: str) -> None:
-    """Aplica los colores del tema elegido a la app.
+    """Aplica a la app los colores del tema elegido.
 
-    Args:
-        nombre: El tema a usar, "oscuro" o "claro".
+    Inyecta el CSS que define fondos, textos y bordes según la paleta clara u
+    oscura.
 
-    Returns:
+    Argumentos:
+        nombre: El tema que se quiere pintar, "oscuro" o "claro".
+
+    Devuelve:
         Nada.
     """
     c = TEMAS[nombre]

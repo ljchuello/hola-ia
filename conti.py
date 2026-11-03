@@ -98,17 +98,20 @@ Regla de oro: si dudas entre rojo y amarillo, elige rojo.
 
 
 def clasificar(caso: str, api_key: str, base_url: str, modelo: str) -> dict:
-    """Le manda el caso a la IA y devuelve el JSON convertido a diccionario.
+    """Clasifica un caso de soporte con la IA y devuelve el semáforo ya interpretado.
 
-    Args:
-        caso: El texto del caso de soporte a clasificar.
-        api_key: La clave de la API del proveedor.
-        base_url: La URL base del proveedor compatible con OpenAI.
-        modelo: El nombre del modelo a usar.
+    Le entrega el texto al modelo junto con el prompt del semáforo y convierte la
+    respuesta en un diccionario listo para usar en la app.
 
-    Returns:
-        El caso clasificado como diccionario, o un diccionario vacío si la
-        respuesta no se puede leer como JSON.
+    Argumentos:
+        caso: El texto del caso tal como lo cuenta la persona.
+        api_key: La clave con la que se autentica el proveedor.
+        base_url: La dirección del proveedor compatible con OpenAI.
+        modelo: El modelo que hace la clasificación.
+
+    Devuelve:
+        El caso clasificado como diccionario, o un diccionario vacío si la IA
+        responde algo que no se puede leer.
     """
     cliente = OpenAI(api_key=api_key, base_url=base_url)
     respuesta = cliente.chat.completions.create(
@@ -127,17 +130,20 @@ def clasificar(caso: str, api_key: str, base_url: str, modelo: str) -> dict:
 
 
 def conversar(mensajes: list, api_key: str, base_url: str, modelo: str) -> dict:
-    """Le manda el historial del chat a la IA y devuelve su respuesta JSON.
+    """Continúa la conversación con Conti y devuelve su próxima respuesta.
 
-    Args:
-        mensajes: El historial de la conversación con los roles y contenidos.
-        api_key: La clave de la API del proveedor.
-        base_url: La URL base del proveedor compatible con OpenAI.
-        modelo: El nombre del modelo a usar.
+    Le pasa al modelo el historial completo para que decida si necesita preguntar
+    algo más o si ya puede clasificar el caso.
 
-    Returns:
-        La respuesta de Conti como diccionario, o un diccionario vacío si la
-        respuesta no se puede leer como JSON.
+    Argumentos:
+        mensajes: El historial de la charla, con el rol y el contenido de cada turno.
+        api_key: La clave con la que se autentica el proveedor.
+        base_url: La dirección del proveedor compatible con OpenAI.
+        modelo: El modelo que responde la conversación.
+
+    Devuelve:
+        La respuesta de Conti como diccionario, o un diccionario vacío si el modelo
+        devuelve algo que no se puede leer.
     """
     cliente = OpenAI(api_key=api_key, base_url=base_url)
     respuesta = cliente.chat.completions.create(
@@ -156,14 +162,17 @@ def conversar(mensajes: list, api_key: str, base_url: str, modelo: str) -> dict:
 
 
 def notificar(clasificacion: dict) -> str:
-    """Arma el mensaje que se 'envía' al equipo de Producción.
+    """Arma el aviso que se muestra al equipo de Producción.
 
-    Args:
-        clasificacion: El caso clasificado con su nivel de semáforo.
+    Toma el nivel del semáforo del caso y lo convierte en un mensaje con el emoji,
+    el nombre del nivel y su tiempo de respuesta.
 
-    Returns:
-        El mensaje de notificación con el emoji, el nombre y el SLA del nivel,
-        o un mensaje genérico si el nivel no existe.
+    Argumentos:
+        clasificacion: El caso clasificado, del que se lee el campo semaforo.
+
+    Devuelve:
+        El mensaje de notificación listo para mostrar, o uno genérico si el nivel
+        no se reconoce.
     """
     nivel = SEMAFORO.get(clasificacion.get("semaforo"))
     if not nivel:
