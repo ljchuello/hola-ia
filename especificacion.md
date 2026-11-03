@@ -10,15 +10,13 @@
 
 ## 2. Qué hace el producto
 
-Máximo tres funcionalidades. Si hay más, van al apartado 8.
-
 1. **Captura conversacional y extracción rápida:** Conversación guiada mediante chat (haciendo una pregunta a la vez) o lectura de correos copiados para identificar quién reporta, sus datos de contacto y el motivo del incidente.
 2. **Clasificación automática con semáforo y SLA:** Evaluación objetiva del caso asignando prioridad (🔴 Bombero: 15 minutos, 🟡 Cotidiano: mismo día, 🟢 Consulta: 24-48 horas), aplicando la regla de oro: ante la duda entre 🔴 y 🟡, siempre 🔴.
 3. **Gestión y aviso a Producción:** Panel de casos con búsqueda por texto, filtros por estado (abierto/cerrado) o semáforo, actualización de estado y generación del mensaje de notificación formateado para el equipo técnico.
 
 ## 3. Entradas y salidas
 
-| usuario | Aplicación | Ejemplo |
+| El usuario da… | La app devuelve… | Ejemplo |
 |---|---|---|
 | Mensajes en lenguaje natural respondiendo a las preguntas de Conti en el chat | Pregunta de seguimiento para completar datos faltantes o tarjeta de clasificación final para confirmar | Usuario: *"Soy Carlos de Farmacia Central (0991234567). No puedo emitir facturas y tengo clientes en mostrador"* → Conti clasifica directamente como 🔴 Bombero (SLA 15 min), resume el caso y sugiere revisar la cola de comprobantes. |
 | Un correo completo pegado en un área de texto | Resumen estructurado con semáforo, motivo de la elección, datos de contacto identificados y sugerencias de acción | Correo: *"Estimados, ¿podrían confirmarme si el reporte contable de retenciones incluye las del mes anterior? Saludos, Laura."* → Clasificación 🟢 Consulta (SLA 24-48 h), motivo: duda informativa que no detiene la operación. |
@@ -108,12 +106,10 @@ Siempre responde SOLO con JSON, sin markdown, en uno de estos dos formatos:
 - **Coste cero:** Se emplea la capa gratuita de proveedores compatibles con OpenAI (OpenRouter, Groq) y despliegue gratuito en la nube.
 - **Gestión de secretos:** La clave de API se almacena exclusivamente en `.streamlit/secrets.toml` o variables de entorno; nunca se expone en el código ni se incluye en el control de versiones.
 - **Sin datos personales reales:** Todos los ejemplos de prueba utilizan datos ficticios para proteger la privacidad.
-- **Lenguaje y tono:** Español neutro con tuteo, sin voseo ni modismos locales, redactado de forma clara para personal no técnico.
+- **Lenguaje y tono:** Español, redactado de forma clara para personal no técnico.
 - **Prohibida la sobreingeniería:** Sin bases de datos complejas, sin autenticación ni arquitecturas multicapa. Los datos se almacenan de manera sencilla y transparente en un archivo `casos.json` local.
 
 ## 7. Criterios de aceptación
-
-La app está bien si:
 
 | Entrada | Resultado esperado |
 |---|---|

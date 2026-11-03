@@ -1,7 +1,7 @@
 # 🎯 Conti Clasificador
 
 **Enlace a la app:** [https://ljchuello-ia.streamlit.app/](https://ljchuello-ia.streamlit.app/)  
-**Autor/a:** Leonardo Chuello
+**Autor:** Leonardo Chuello
 
 ## Pitch
 
@@ -34,12 +34,13 @@ El personal de soporte de Sermatick recibe a diario mensajes desordenados por co
   3. *Esquema JSON estricto:* Restringe la salida del modelo a un JSON estructurado (`pregunta` o `clasificacion` con `semaforo`, `nombre`, `contacto`, `resumen`, `motivo`, `acciones`).
 - **Qué delegué al agente y qué revisé a mano:**
   - *Delegado al agente:* Estructura inicial de la interfaz en Streamlit, maquetación del selector de temas claro/oscuro con CSS inyectado y lógica de filtrado dinámico en la pestaña de gestión.
-  - *Revisado a mano:* Calibración de los prompts para garantizar respuestas en español neutro sin voseo, simplificación radical del código eliminando clases y dependencias innecesarias (cumpliendo AGENTS.md), y gestión segura de secretos.
+  - *Revisado a mano:* Calibración de los prompts para garantizar español neutro con trato de tú (después de que en una prueba el modelo empezó a responder con voseo argentino), simplificación radical del código eliminando clases y dependencias innecesarias (cumpliendo AGENTS.md), y gestión segura de secretos.
 
 ## Prueba y mejora
 
 | Quién la probó | Qué probó | Qué pasó | Qué cambié |
 |---|---|---|---|
+| Operador de soporte (yo como usuario) | Conversó con Conti en el chat para reportar un caso | El modelo comenzó a responder con voseo y modismos argentinos (*"fijate que tenés..."*). | Añadí la instrucción explícita en el system prompt y en las reglas para forzar español neutro con trato de tú y prohibir el voseo. |
 | Operador de soporte (yo como usuario) | Ingresó: *"El sistema va lento pero todavía puedo emitir comprobantes"* | El modelo dudó y lo clasificó como Bombero por la mención de comprobantes. | Ajusté el prompt aclarando que lentitud operativa sin detención de venta es 🟡 Cotidiano. |
 | Operador de soporte | Pegó un correo con datos incompletos y sin teléfono de contacto | La app generaba valores nulos o campos en blanco poco claros. | Hice que nombre y contacto sean opcionales y muestren "Sin nombre" y "Sin contacto" por defecto. |
 | Desarrollador de Producción | Notificación de caso crítico generado por la app | El mensaje de aviso era extenso y requería resumirse manualmente. | Simplifiqué la función `notificar()` para emitir una sola línea estandarizada con emoji, nivel y SLA. |

@@ -30,7 +30,8 @@ def cargar_casos() -> list:
         return []
     try:
         with open(RUTA_CASOS, encoding="utf-8") as archivo:
-            return json.load(archivo)
+            datos = json.load(archivo)
+            return datos if isinstance(datos, list) else []
     except Exception:
         return []
 
@@ -70,13 +71,13 @@ def guardar_caso(nombre: str, contacto: str, motivo_contacto: str, resultado: di
         El caso ya armado como diccionario, tal como quedó guardado.
     """
     caso = {
-        "id": max((c["id"] for c in st.session_state.casos), default=0) + 1,
+        "id": max((c.get("id", 0) for c in st.session_state.casos if isinstance(c, dict)), default=0) + 1,
         "nombre": nombre,
         "contacto": contacto,
         "motivo_contacto": motivo_contacto,
-        "semaforo": resultado["semaforo"],
-        "explicacion": resultado["motivo"],
-        "acciones": resultado["acciones"],
+        "semaforo": resultado.get("semaforo", "rojo"),
+        "explicacion": resultado.get("motivo", ""),
+        "acciones": resultado.get("acciones", []) if isinstance(resultado.get("acciones"), list) else [],
         "estado": "abierto",
         "notificado": False,
         "fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
@@ -101,7 +102,7 @@ def leer_secreto(clave: str) -> str:
     """
     try:
         return st.secrets.get(clave, "")
-    except StreamlitSecretNotFoundError:
+    except Exception:
         return ""
 
 
@@ -282,19 +283,22 @@ with tab_chat:
     for mensaje in st.session_state.mensajes:
         with st.chat_message(mensaje["role"]):
             st.write(mensaje["content"])
+            if mensaje.get("detalle_error"):
+                with st.expander("🔍 Detalle técnico"):
+                    st.code(mensaje["detalle_error"], language="text")
 
     # Conti ya clasificó: pedimos confirmación antes de guardar
     if st.session_state.pendiente:
         caso = st.session_state.pendiente
-        nivel = SEMAFORO[caso["semaforo"]]
+        nivel = SEMAFORO.get(caso.get("semaforo"), SEMAFORO["rojo"])
 
         with st.container(border=True):
             st.subheader("🚦 ¿Confirmas esta clasificación?")
-            st.write(f"{nivel['emoji']} **{nivel['nombre']}** · {caso['resumen']}")
-            st.write(f"🏢 **{caso['nombre'] or 'Sin nombre'}** · 📞 {caso['contacto'] or 'Sin contacto'}")
-            st.write(f"💡 **Por qué:** {caso['motivo']}")
+            st.write(f"{nivel['emoji']} **{nivel['nombre']}** · {caso.get('resumen', '')}")
+            st.write(f"🏢 **{caso.get('nombre') or 'Sin nombre'}** · 📞 {caso.get('contacto') or 'Sin contacto'}")
+            st.write(f"💡 **Por qué:** {caso.get('motivo', '')}")
             st.write("✅ **Acciones sugeridas:**")
-            for accion in caso["acciones"]:
+            for accion in caso.get("acciones", []):
                 st.write(f"- {accion}")
 
             col_si, col_no = st.columns(2)
@@ -324,9 +328,22 @@ with tab_chat:
                 with st.chat_message("assistant"):
                     with st.spinner("Conti está pensando..."):
                         respuesta = conversar(st.session_state.mensajes, api_key, base_url, modelo)
-                if respuesta.get("tipo") == "clasificacion":
+                if respuesta.get("error"):
+                    st.session_state.mensajes.append(
+                        {
+                            "role": "assistant",
+                            "content": (
+                                "⚠️ **Servicio no disponible temporalmente**\n\n"
+                                "En este momento no puedo conectarme con el motor de inteligencia artificial. "
+                                "Esto suele ocurrir por un inconveniente con las credenciales de acceso o una intermitencia del proveedor.\n\n"
+                                "Por favor, intenta nuevamente en unos minutos o contacta al administrador del sistema."
+                            ),
+                            "detalle_error": respuesta.get("detalle", ""),
+                        }
+                    )
+                elif respuesta.get("tipo") == "clasificacion":
                     st.session_state.pendiente = respuesta
-                    nivel = SEMAFORO[respuesta["semaforo"]]
+                    nivel = SEMAFORO.get(respuesta.get("semaforo"), SEMAFORO["rojo"])
                     st.session_state.mensajes.append(
                         {
                             "role": "assistant",
@@ -350,7 +367,7 @@ with tab_gestion:
     if not st.session_state.casos:
         st.info("Todavía no hay casos. Chatea con Conti o pega un correo para crear el primero.")
     else:
-        abiertos = sum(1 for caso in st.session_state.casos if caso["estado"] == "abierto")
+        abiertos = sum(1 for caso in st.session_state.casos if isinstance(caso, dict) and caso.get("estado") == "abierto")
         col_abiertos, col_cerrados, col_total = st.columns(3)
         col_abiertos.metric("📂 Abiertos", abiertos)
         col_cerrados.metric("✅ Cerrados", len(st.session_state.casos) - abiertos)
@@ -370,47 +387,50 @@ with tab_gestion:
 
         encontrados = 0
         for caso in reversed(st.session_state.casos):
-            texto_busqueda = f"{caso['nombre']} {caso['contacto']} {caso['motivo_contacto']}".lower()
+            if not isinstance(caso, dict):
+                continue
+            texto_busqueda = f"{caso.get('nombre', '')} {caso.get('contacto', '')} {caso.get('motivo_contacto', '')}".lower()
             if busqueda.lower() not in texto_busqueda:
                 continue
-            if filtro_estado == "Abiertos" and caso["estado"] != "abierto":
+            if filtro_estado == "Abiertos" and caso.get("estado") != "abierto":
                 continue
-            if filtro_estado == "Cerrados" and caso["estado"] != "cerrado":
+            if filtro_estado == "Cerrados" and caso.get("estado") != "cerrado":
                 continue
-            if color_elegido and caso["semaforo"] != color_elegido:
+            if color_elegido and caso.get("semaforo") != color_elegido:
                 continue
 
             encontrados += 1
-            nivel = SEMAFORO[caso["semaforo"]]
+            nivel = SEMAFORO.get(caso.get("semaforo"), SEMAFORO["rojo"])
 
             with st.container(border=True):
                 col_nombre, col_estado_caso = st.columns([3, 1])
-                col_nombre.write(f"{nivel['emoji']} **{nivel['nombre']}** · {caso['nombre'] or 'Sin nombre'}")
-                col_estado_caso.caption(f"**{caso['estado'].capitalize()}**")
-                st.caption(f"📞 {caso['contacto'] or 'Sin contacto'} · 🕒 {caso['fecha']}")
-                st.write(caso["motivo_contacto"])
-                st.caption(f"💡 {caso['explicacion']}")
+                col_nombre.write(f"{nivel['emoji']} **{nivel['nombre']}** · {caso.get('nombre') or 'Sin nombre'}")
+                col_estado_caso.caption(f"**{str(caso.get('estado', 'abierto')).capitalize()}**")
+                st.caption(f"📞 {caso.get('contacto') or 'Sin contacto'} · 🕒 {caso.get('fecha', '')}")
+                st.write(caso.get("motivo_contacto", ""))
+                st.caption(f"💡 {caso.get('explicacion', '')}")
 
                 with st.expander("✅ Acciones sugeridas"):
-                    for accion in caso["acciones"]:
+                    for accion in caso.get("acciones", []):
                         st.write(f"- {accion}")
 
                 col_cerrar, col_notificar = st.columns(2)
-                if caso["estado"] == "abierto":
-                    if col_cerrar.button("✅ Cerrar", key=f"cerrar_{caso['id']}"):
+                id_caso = caso.get("id", encontrados)
+                if caso.get("estado") == "abierto":
+                    if col_cerrar.button("✅ Cerrar", key=f"cerrar_{id_caso}"):
                         caso["estado"] = "cerrado"
                         guardar_casos(st.session_state.casos)
                         st.rerun()
                 else:
-                    if col_cerrar.button("🔓 Reabrir", key=f"reabrir_{caso['id']}"):
+                    if col_cerrar.button("🔓 Reabrir", key=f"reabrir_{id_caso}"):
                         caso["estado"] = "abierto"
                         guardar_casos(st.session_state.casos)
                         st.rerun()
 
-                if caso["notificado"]:
+                if caso.get("notificado"):
                     col_notificar.caption("📣 Notificado")
                 else:
-                    if col_notificar.button("📣 Notificar", key=f"notificar_{caso['id']}"):
+                    if col_notificar.button("📣 Notificar", key=f"notificar_{id_caso}"):
                         st.session_state.aviso = notificar(caso)
                         caso["notificado"] = True
                         guardar_casos(st.session_state.casos)
@@ -428,9 +448,14 @@ if enviar_texto and not api_key:
 if enviar_texto:
     with st.spinner("Clasificando el correo..."):
         resultado = clasificar(texto, api_key, base_url, modelo)
-    guardar_caso(resultado.get("nombre", ""), resultado.get("contacto", ""), texto, resultado)
-    st.session_state.aviso = "🚦 Correo clasificado y guardado"
-    st.rerun()
+    if resultado.get("error"):
+        st.error("⚠️ El servicio de IA no está disponible en este momento. Por favor verifica las credenciales o intenta más tarde.")
+        with st.expander("🔍 Detalle técnico"):
+            st.code(resultado.get("detalle", "Error desconocido"), language="text")
+    else:
+        guardar_caso(resultado.get("nombre", ""), resultado.get("contacto", ""), texto, resultado)
+        st.session_state.aviso = "🚦 Correo clasificado y guardado"
+        st.rerun()
 
 # ❤️ Firma del proyecto (el span fuerza la fuente de emojis a color)
 st.divider()

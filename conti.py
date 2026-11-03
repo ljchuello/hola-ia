@@ -110,23 +110,22 @@ def clasificar(caso: str, api_key: str, base_url: str, modelo: str) -> dict:
         modelo: El modelo que hace la clasificación.
 
     Devuelve:
-        El caso clasificado como diccionario, o un diccionario vacío si la IA
-        responde algo que no se puede leer.
+        El caso clasificado como diccionario, o un diccionario con error si falla.
     """
-    cliente = OpenAI(api_key=api_key, base_url=base_url)
-    respuesta = cliente.chat.completions.create(
-        model=modelo,
-        temperature=0,
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": caso},
-        ],
-    )
     try:
+        cliente = OpenAI(api_key=api_key, base_url=base_url)
+        respuesta = cliente.chat.completions.create(
+            model=modelo,
+            temperature=0,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": caso},
+            ],
+        )
         return json.loads(respuesta.choices[0].message.content)
-    except Exception:
-        return {}
+    except Exception as e:
+        return {"error": True, "detalle": str(e)}
 
 
 def conversar(mensajes: list, api_key: str, base_url: str, modelo: str) -> dict:
@@ -142,23 +141,22 @@ def conversar(mensajes: list, api_key: str, base_url: str, modelo: str) -> dict:
         modelo: El modelo que responde la conversación.
 
     Devuelve:
-        La respuesta de Conti como diccionario, o un diccionario vacío si el modelo
-        devuelve algo que no se puede leer.
+        La respuesta de Conti como diccionario, o un diccionario con error si falla.
     """
-    cliente = OpenAI(api_key=api_key, base_url=base_url)
-    respuesta = cliente.chat.completions.create(
-        model=modelo,
-        temperature=0,
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": CHAT_PROMPT},
-            *mensajes,
-        ],
-    )
     try:
+        cliente = OpenAI(api_key=api_key, base_url=base_url)
+        respuesta = cliente.chat.completions.create(
+            model=modelo,
+            temperature=0,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": CHAT_PROMPT},
+                *mensajes,
+            ],
+        )
         return json.loads(respuesta.choices[0].message.content)
-    except Exception:
-        return {}
+    except Exception as e:
+        return {"error": True, "detalle": str(e)}
 
 
 def notificar(clasificacion: dict) -> str:
@@ -174,6 +172,8 @@ def notificar(clasificacion: dict) -> str:
         El mensaje de notificación listo para mostrar, o uno genérico si el nivel
         no se reconoce.
     """
+    if not isinstance(clasificacion, dict):
+        return "📣 Caso notificado a Producción · SLA: a definir"
     nivel = SEMAFORO.get(clasificacion.get("semaforo"))
     if not nivel:
         return "📣 Caso notificado a Producción · SLA: a definir"
