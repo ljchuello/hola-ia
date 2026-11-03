@@ -1,119 +1,64 @@
 # 🎯 Conti Clasificador
 
-Una muestra mínima de cómo usar un LLM para clasificar casos de soporte **conversando con un chatbot** y avisar al equipo de Producción con un semáforo.
+**Enlace a la app:** [https://ljchuello-ia.streamlit.app/](https://ljchuello-ia.streamlit.app/)  
+**Autor/a:** Leonardo Chuello
 
-> ⚠️ Proyecto demostrativo. No es para producción: guarda los casos en un JSON local, no valida errores y no envía notificaciones reales.
+## Pitch
 
-## 🏢 ¿Para quién es?
+En Sermatick Cia Ltda, el equipo de soporte técnico de primera línea pierde tiempo valioso clasificando manualmente decenas de incidencias diarias sin un criterio unificado de urgencia. Conti Clasificador es una aplicación web que conversa mediante chat o procesa correos pegados para identificar el incidente y asignarle de inmediato un semáforo operativo de atención. La inteligencia artificial aporta extracción automática de datos de contacto y una evaluación objetiva de criticidad con tiempos máximos de respuesta (SLA). Durante las pruebas aprendimos que ante la duda entre un fallo crítico y una lentitud operativa, el modelo requería una «regla de oro» explícita para priorizar siempre el caso crítico y no minimizar riesgos. Como siguiente paso, integraríamos el clasificador directamente vía webhooks con el sistema de tickets interno para atender el 100% de los casos bombero en menos de 15 minutos.
 
-Conti Clasificador es la demo de una propuesta para **Sermatick Cia Ltda**, empresa de desarrollo de software que ofrece un sistema de facturación electrónica como servicio.
+## El problema
 
-- 🎯 **Objetivo:** servir de MVP para presentar la propuesta e implementarla después en producción.
-- 🧑‍💻 **Quién lo usa:** el personal de soporte, la primera línea frente al cliente.
-- 🗂️ **Qué resuelve:** ordena y prioriza los casos antes de que escalen al departamento de Producción.
+El personal de soporte de Sermatick recibe a diario mensajes desordenados por correo y mensajería de clientes de su sistema de facturación electrónica. Hoy en día, cada operador clasifica según su intuición subjetiva y escala incidentes a Producción sin un criterio de urgencia unificado, saturando a los desarrolladores con dudas operativas. Resolver esto merece la pena porque un error al timbrar una factura con clientes esperando en caja no puede demorarse, mientras que una consulta informativa no debe interrumpir el flujo del equipo técnico.
 
-## 🚦 El semáforo
+## Qué hace la app
 
-| Color | Nombre | Qué significa | SLA |
-| --- | --- | --- | --- |
-| 🔴 | Bombero | Un proceso crítico está detenido y hay un cliente esperando: no se puede guardar una factura o una nota de crédito, no se puede cerrar una venta, el sistema no responde o se pierde información | 15 minutos |
-| 🟡 | Cotidiano | El sistema funciona, pero algo lo traba: la impresora no imprime, va lento o una pantalla da error, y se puede seguir trabajando por otro lado | Mismo día |
-| 🟢 | Consulta | Una duda, una solicitud de información o un tema con un tercero (proveedor, banco, internet) que no frena la operación | 24-48 horas |
+1. **Inicia la conversación o pega un correo:** En la pestaña *Chat agéntico*, conversas con Conti, quien te saluda y hace una pregunta a la vez (quién eres, cómo contactarte y qué ocurrió). También puedes usar la pestaña *Pegar correo* para procesar un mensaje completo en un solo paso.
+2. **Obtén la clasificación automática:** La app analiza el texto y genera una ficha con el semáforo de prioridad (🔴 Bombero: 15 min, 🟡 Cotidiano: mismo día, 🟢 Consulta: 24-48 h), un resumen, el motivo de la elección y acciones recomendadas.
+3. **Confirma y guarda:** Valida los datos identificados (nombre, contacto y descripción) y pulsa *Confirmar y guardar* para registrar el caso como abierto.
+4. **Gestiona y notifica:** En la pestaña *Gestión*, busca casos por texto o fíltralos por estado y semáforo. Con un clic en *Notificar*, obtienes el mensaje formateado con emoji y SLA listo para avisar al equipo de Producción.
 
-**La frontera:** si el trabajo se detiene es 🔴; si solo se hace más lento es 🟡; si es de un tercero y no frena la operación es 🟢.
+## La pieza de IA
 
-**Regla de oro:** ante la duda entre 🔴 y 🟡, siempre 🔴.
+- **Qué usa:** API de modelos LLM mediante el SDK de OpenAI, configurado por defecto con `deepseek/deepseek-v4.1-flash-1017` a través de OpenRouter (compatible con OpenAI, Groq u Ollama).
+- **Por qué esa opción:** Ofrece respuestas rápidas, de muy bajo coste y estructuradas estrictamente en JSON, permitiendo cambiar de proveedor o modelo modificando solo las credenciales sin alterar una sola línea de código.
+- **Qué pasa si falla:** Si no se configura la clave de API, la app muestra un aviso amistoso (`Falta configurar LLM_API_KEY en .streamlit/secrets.toml 🔑`) sin romperse; ante errores de conexión o respuestas no legibles, devuelve un estado seguro por defecto evitando que la interfaz falle.
 
-## ▶️ Cómo correrlo
+## Cómo la he construido
+
+- **Herramientas:** Antigravity IDE (asistente de código con modelos Gemini), Streamlit para la interfaz web, Python 3.12 y Git/GitHub para el control de versiones.
+- **Fichero de contexto del agente:** [AGENTS.md](AGENTS.md), donde se definen la regla de oro, la prohibición de sobreingeniería, el tono en español neutro con trato de tú y las convenciones del proyecto.
+- **Prompts clave:**
+  1. *Prompt del semáforo con regla de oro:* Define las fronteras de criticidad y la regla «si dudas entre rojo y amarillo, elige rojo».
+  2. *Prompt conversacional de Conti:* Guía el diálogo turno a turno para hacer una pregunta a la vez sin abrumar al usuario.
+  3. *Esquema JSON estricto:* Restringe la salida del modelo a un JSON estructurado (`pregunta` o `clasificacion` con `semaforo`, `nombre`, `contacto`, `resumen`, `motivo`, `acciones`).
+- **Qué delegué al agente y qué revisé a mano:**
+  - *Delegado al agente:* Estructura inicial de la interfaz en Streamlit, maquetación del selector de temas claro/oscuro con CSS inyectado y lógica de filtrado dinámico en la pestaña de gestión.
+  - *Revisado a mano:* Calibración de los prompts para garantizar respuestas en español neutro sin voseo, simplificación radical del código eliminando clases y dependencias innecesarias (cumpliendo AGENTS.md), y gestión segura de secretos.
+
+## Prueba y mejora
+
+| Quién la probó | Qué probó | Qué pasó | Qué cambié |
+|---|---|---|---|
+| Operador de soporte (yo como usuario) | Ingresó: *"El sistema va lento pero todavía puedo emitir comprobantes"* | El modelo dudó y lo clasificó como Bombero por la mención de comprobantes. | Ajusté el prompt aclarando que lentitud operativa sin detención de venta es 🟡 Cotidiano. |
+| Operador de soporte | Pegó un correo con datos incompletos y sin teléfono de contacto | La app generaba valores nulos o campos en blanco poco claros. | Hice que nombre y contacto sean opcionales y muestren "Sin nombre" y "Sin contacto" por defecto. |
+| Desarrollador de Producción | Notificación de caso crítico generado por la app | El mensaje de aviso era extenso y requería resumirse manualmente. | Simplifiqué la función `notificar()` para emitir una sola línea estandarizada con emoji, nivel y SLA. |
+
+## Ejecutar en local (opcional)
 
 ```bash
 pip install -r requirements.txt
+# Ruta A: pon la clave en .streamlit/secrets.toml y ejecuta
 streamlit run app.py
+# Ruta B: exporta la clave y ejecuta
+export LLM_API_KEY="…" && streamlit run app.py
 ```
 
-## 🔐 Secretos (recomendado)
+## Capturas
 
-Para que quien use la app no tenga que pegar ninguna clave:
+> 💡 *Espacio reservado para las capturas de la entrega (sin claves de API ni datos sensibles a la vista):*
 
-1. Copia la plantilla:
-   ```bash
-   cp .streamlit/secrets.example.toml .streamlit/secrets.toml
-   ```
-2. Abre `.streamlit/secrets.toml` y pon tu clave real:
-   ```toml
-   LLM_API_KEY = "sk-..."
-   ```
-3. Reinicia Streamlit.
-
-Con la clave configurada, la app la usa directamente: no hay campos de configuración en la barra lateral. El archivo `secrets.toml` está ignorado por git y nunca se sube.
-
-En Streamlit Cloud, pega los mismos valores en **App settings → Secrets**.
-
-## 🔑 Configuración
-
-El orden de prioridad es: `secrets.toml` → variable de entorno. Si no hay clave, la app avisa al intentar clasificar:
-
-| Variable | Por defecto |
-| --- | --- |
-| `LLM_API_KEY` | vacío |
-| `LLM_BASE_URL` | `https://openrouter.ai/api/v1` |
-| `LLM_MODEL` | `deepseek/deepseek-v4.1-flash-1017` |
-
-Funciona con cualquier API compatible con OpenAI 🤝:
-
-- OpenAI: `https://api.openai.com/v1`
-- Groq: `https://api.groq.com/openai/v1`
-- OpenRouter: `https://openrouter.ai/api/v1`
-- Ollama: `http://localhost:11434/v1` (la API key puede ser cualquier texto)
-
-## 💬 Chat agéntico
-
-La pestaña **Chat agéntico** reemplaza al formulario de "Nuevo caso":
-
-1. Conti saluda y te va preguntando una cosa a la vez: quién eres, cómo contactarte y qué pasó.
-2. Le respondes con lenguaje natural, como en un chat normal. Nada de formatos.
-3. Cuando Conti cree que ya tiene lo necesario, clasifica el caso con el semáforo.
-4. Antes de guardar, te muestra el resumen y pides confirmación. Si no quedó bien, sigues hablando.
-5. Al confirmar, el caso se guarda como abierto y queda en Gestión.
-
-También puedes pegar un correo completo en la pestaña **📋 Pegar correo** y Conti lo clasifica de inmediato.
-
-## 🗂️ Gestión de casos
-
-La pestaña **Gestión** permite:
-
-- 🔍 Buscar por nombre de la empresa o persona, teléfono, correo o motivo.
-- 🎚️ Filtrar por estado: abiertos, cerrados o todos.
-- 🚦 Filtrar por semáforo.
-- ✅ Cerrar un caso abierto o 🔓 reabrirlo.
-- 📣 Notificar a Producción.
-
-Los casos se guardan en `casos.json`, así que sobreviven a una recarga del navegador. Ese archivo es local y está ignorado por git.
-
-## 🧠 Cómo funciona
-
-1. Hablas con Conti en el chat (o pegas un correo completo).
-2. `conti.py` le manda el historial al modelo con un prompt que define el semáforo.
-3. En cada turno el modelo responde un JSON: o hace una pregunta, o entrega la clasificación.
-4. Cuando clasifica, la app te muestra el resumen para confirmar antes de guardar.
-5. El caso se guarda como **abierto**, aparece un aviso y queda en **Gestión**.
-6. En **Gestión** puedes buscarlo, cerrarlo, reabrirlo o notificarlo.
-
-### 🛠️ ¿Cómo está construido?
-
-- 🧠 **Prompt:** un texto en `conti.py` le dice al modelo cómo clasificar; no hay reglas escondidas en el código.
-- 🤝 **SDK:** las llamadas se hacen con el **SDK de OpenAI**, así funciona con cualquier API compatible.
-- 🌐 **Proveedor:** el modelo es **DeepSeek V4 Flash** (`deepseek/deepseek-v4.1-flash-1017`), servido a través de **OpenRouter**.
-- 🔐 **Secretos:** la API key y la dirección del proveedor viven en `.streamlit/secrets.toml`, ignorado por git. La plantilla pública es `secrets.example.toml`.
-
-Cambiar de proveedor o de modelo es cambiar esas dos líneas de secretos, sin tocar el código.
-
-## 📁 Archivos
-
-- `app.py` — interfaz de Streamlit.
-- `conti.py` — prompts, llamada al modelo y mensaje de notificación.
-- `casos.json` — casos guardados localmente (ignorado por git).
-- `.streamlit/secrets.example.toml` — plantilla de secretos.
-- `.streamlit/secrets.toml` — tu clave real (ignorado por git).
-- `AGENTS.md` — reglas del proyecto (incluida la prohibición de sobreingeniería).
-- `requirements.txt` — dependencias.
+1. **App funcionando:** Diálogo en el chat con Conti realizando preguntas y entregando la ficha de confirmación.
+2. **Caso límite (regla de oro):** Ejemplo donde una duda entre lentitud y paro en facturación se clasifica automáticamente como 🔴 Bombero.
+3. **Trabajo con la IA:** Uso del asistente en Antigravity siguiendo las directrices de `AGENTS.md`.
+4. **Prueba y gestión:** Tabla de casos en la pestaña *Gestión* con filtros aplicados y caso notificado a Producción.
