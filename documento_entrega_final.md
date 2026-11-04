@@ -105,3 +105,28 @@ Enlace al documento completo en el repositorio: [especificacion.md](https://gith
 3. **Qué aporta la IA, que no se conseguiría sin ella:** Comprende el lenguaje natural caótico y fragmentado de clientes con problemas urgentes, abstrayendo de inmediato la intención, resumiendo el incidente y determinando objetivamente la criticidad operativa sin obligar al usuario a llenar formularios extensos y rígidos.
 4. **Qué aprendí de la prueba y qué cambié:** Durante las pruebas comprobé que el modelo tendía a subestimar fallos que combinaban lentitud con procesos de venta; aprendí que requería una «regla de oro» explícita en el prompt para que, ante cualquier duda razonable, clasifique preventivamente como 🔴 Bombero y proteja la facturación de los clientes.
 5. **Qué haría después, con un dato o un ejemplo concreto que lo respalde:** Como siguiente paso, conectaría Conti Clasificador mediante webhooks directamente con el sistema de tickets interno de Sermatick, con el objetivo de garantizar que el 100% de los casos 🔴 Bombero notifiquen al equipo de guardia en menos de 60 segundos y se atiendan antes del límite de SLA de 15 minutos, reduciendo a cero las pérdidas de venta por paros en caja de cobro.
+
+## 8. Capturas
+
+Capturas de pantalla del proyecto, cada una con una línea descriptiva de lo que se observa. Ninguna imagen expone credenciales ni claves privadas.
+
+1. **La app funcionando en su caso principal:**
+   Pantalla inicial de Conti Clasificador con el asistente listo para recibir incidencias mediante chat interactivo o pegado de correos.
+   ![La app funcionando en su caso principal](img/pantalla_principal.png)
+
+2. **La app ante un caso límite (regla de oro):**
+   Incidencia con clientes en espera que activa la regla de oro clasificándose automáticamente como 🔴 Bombero con su ficha de confirmación.
+   ![Caso límite con regla de oro](img/caso_bombero.png)
+
+3. **Vuestro trabajo con la IA:**
+   Momento de la conversación técnica en el entorno de desarrollo consultando cómo implementar foco y desplazamiento automático en Streamlit.
+   ![Trabajo con la IA](img/chat_hardness.png)
+
+4. **La app ante un caso de error:**
+   Manejo resiliente de error de conexión o cuota de API (error 401), informando amistosamente en pantalla sin romper la app ni revelar claves.
+   ![Caso de error controlado](img/caso_de_error.png)
+
+5. **La prueba (comentario en el foro del hito):**
+   Publicación de la propuesta del proyecto y enlace de la versión funcional en el debate del hito para recibir retroalimentación del equipo. (no se recibió retroalimentación)
+   ![Comentario en el foro del debate del hito](img/comentario_foro.png)
+

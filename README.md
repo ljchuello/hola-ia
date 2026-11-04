@@ -26,7 +26,7 @@ El personal de soporte de Sermatick recibe a diario mensajes desordenados por co
 
 ## Cómo la he construido
 
-- **Herramientas:** Antigravity IDE (asistente de código con modelos Gemini), Streamlit para la interfaz web, Python 3.12 y Git/GitHub para el control de versiones.
+- **Herramientas:** Antigravity 2.0 / OpenCode, Streamlit para la interfaz web, Python 3.12 y Git/GitHub para el control de versiones.
 - **Fichero de contexto del agente:** [AGENTS.md](AGENTS.md), donde se definen la regla de oro, la prohibición de sobreingeniería, el tono en español neutro con trato de tú y las convenciones del proyecto.
 - **Prompts clave:**
   1. *Prompt del semáforo con regla de oro:* Define las fronteras de criticidad y la regla «si dudas entre rojo y amarillo, elige rojo».
@@ -56,9 +56,17 @@ export LLM_API_KEY="…" && streamlit run app.py
 
 ## Capturas
 
-> 💡 *Espacio reservado para las capturas de la entrega (sin claves de API ni datos sensibles a la vista):*
+1. **App funcionando:** Diálogo inicial y presentación de Conti listo para recibir incidencias.
+   ![App funcionando](img/pantalla_principal.png)
 
-1. **App funcionando:** Diálogo en el chat con Conti realizando preguntas y entregando la ficha de confirmación.
-2. **Caso límite (regla de oro):** Ejemplo donde una duda entre lentitud y paro en facturación se clasifica automáticamente como 🔴 Bombero.
-3. **Trabajo con la IA:** Uso del asistente en Antigravity siguiendo las directrices de `AGENTS.md`.
-4. **Prueba y gestión:** Tabla de casos en la pestaña *Gestión* con filtros aplicados y caso notificado a Producción.
+2. **Caso límite (regla de oro):** Ejemplo donde una incidencia de facturación con clientes en cola activa la regla de oro clasificándose automáticamente como 🔴 Bombero con su ficha de confirmación.
+   ![Caso Bombero](img/caso_bombero.png)
+
+3. **Trabajo con la IA:** Sesión de desarrollo en el entorno de `OpenCode` consultando mejoras técnicas siguiendo las directrices de `AGENTS.md`.
+   ![Trabajo con la IA](img/chat_hardness.png)
+
+4. **Prueba y gestión:** Panel de la pestaña *Gestión* con métricas de casos abiertos/cerrados, filtros y botón para notificar a Producción.
+   ![Prueba y gestión](img/listando_casos.png)
+
+5. **Manejo de errores:** Demostración de resiliencia ante contingencias de API (error 401), ofreciendo un mensaje claro al usuario sin interrumpir la interfaz.
+   ![Manejo de errores](img/caso_de_error.png)
