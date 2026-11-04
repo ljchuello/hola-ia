@@ -124,7 +124,7 @@ Siempre responde SOLO con JSON, sin markdown, en uno de estos dos formatos:
 
 - Autenticación de usuarios y perfiles con permisos diferenciados.
 - Base de datos relacional externa (PostgreSQL, MySQL) o almacenamiento en la nube.
-- Envío automatizado de notificaciones reales (Webhooks de Slack/Discord, correos electrónicos o mensajes de WhatsApp).
+- Envío automatizado de notificaciones reales (Webhooks de Slack/Discord, correos electrónicos o mensajes de WhatsApp/Telegram).
 - Reintentos automáticos avanzados, cachés en memoria y métricas de rendimiento.
 - Solución automatizada de incidencias en el sistema de facturación.
 
