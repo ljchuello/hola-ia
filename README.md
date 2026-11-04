@@ -40,10 +40,9 @@ El personal de soporte de Sermatick recibe a diario mensajes desordenados por co
 
 | Quién la probó | Qué probó | Qué pasó | Qué cambié |
 |---|---|---|---|
-| Operador de soporte (yo como usuario) | Conversó con Conti en el chat para reportar un caso | El modelo comenzó a responder con voseo y modismos argentinos (*"fijate que tenés..."*). | Añadí la instrucción explícita en el system prompt y en las reglas para forzar español neutro con trato de tú y prohibir el voseo. |
-| Operador de soporte (yo como usuario) | Ingresó: *"El sistema va lento pero todavía puedo emitir comprobantes"* | El modelo dudó y lo clasificó como Bombero por la mención de comprobantes. | Ajusté el prompt aclarando que lentitud operativa sin detención de venta es 🟡 Cotidiano. |
-| Operador de soporte | Pegó un correo con datos incompletos y sin teléfono de contacto | La app generaba valores nulos o campos en blanco poco claros. | Hice que nombre y contacto sean opcionales y muestren "Sin nombre" y "Sin contacto" por defecto. |
-| Desarrollador de Producción | Notificación de caso crítico generado por la app | El mensaje de aviso era extenso y requería resumirse manualmente. | Simplifiqué la función `notificar()` para emitir una sola línea estandarizada con emoji, nivel y SLA. |
+| Andres | La aplicación completa | No proporcionó ninguna mejora, indicó que todo estaba funcionando como él esperó | Nada |
+| Victor | Parte visual y lógica del LLM | Hizo comentarios visuales sobre dudas de los elementos | Le expliqué el motivo por el cual lo hice de esa manera y comprendió todo y luego indicó que no se debe cambiar nada |
+| Leonardo (yo) | Toda la aplicación. | Problemas visuales. LLM Falta de contexto. Problemas para leer/escribir el .json con el historial de casos | Corrección visual, más contexto al LLM, corrección de errores en el .json |
 
 ## Ejecutar en local (opcional)
 
